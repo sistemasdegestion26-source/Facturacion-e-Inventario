@@ -1,0 +1,6 @@
+{
+  "name": "CREANDO - Sistema Administrativo",
+  "description": "Sistema simplificado de administración: Panel, Inventario, Presupuesto, Facturación y Clientes con formato oficial CREANDO.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
