@@ -5,7 +5,8 @@ const KEYS = {
   PRODUCTS: 'creando_products_v2',
   CLIENTS: 'creando_clients_v2',
   DOCUMENTS: 'creando_documents_v2',
-  AUTH: 'creando_auth_session_v2'
+  AUTH: 'creando_auth_session_v2',
+  PASSWORD: 'creando_auth_password_v2'
 };
 
 export const storageService = {
@@ -57,6 +58,44 @@ export const storageService = {
       localStorage.setItem(KEYS.AUTH, 'true');
     } else {
       localStorage.removeItem(KEYS.AUTH);
+    }
+  },
+
+  getPassword(): string {
+    return localStorage.getItem(KEYS.PASSWORD) || 'Ceo2026';
+  },
+
+  setPassword(newPass: string): void {
+    localStorage.setItem(KEYS.PASSWORD, newPass);
+  },
+
+  async syncFromServer(): Promise<{ success: boolean; data?: any; updatedAt?: number }> {
+    try {
+      const res = await fetch('/api/sync');
+      if (!res.ok) return { success: false };
+      const json = await res.json();
+      return json;
+    } catch {
+      return { success: false };
+    }
+  },
+
+  async syncToServer(payload: {
+    products: Product[];
+    clients: Client[];
+    documents: DocumentRecord[];
+    password?: string;
+  }): Promise<{ success: boolean; updatedAt?: number }> {
+    try {
+      const res = await fetch('/api/sync', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      if (!res.ok) return { success: false };
+      return await res.json();
+    } catch {
+      return { success: false };
     }
   },
 

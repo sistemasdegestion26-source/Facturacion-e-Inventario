@@ -79,9 +79,9 @@ export const ClientesView: React.FC<ClientesViewProps> = ({
 
         <button
           onClick={openNewModal}
-          className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#0052cc] hover:bg-[#0047b3] text-white text-xs sm:text-sm font-semibold transition-all shadow-xs"
+          className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-gradient-commercial-btn text-white text-xs sm:text-sm font-bold transition-all shadow-md active:scale-98 cursor-pointer"
         >
-          <Plus className="w-4 h-4" />
+          <Plus className="w-4 h-4 stroke-[2.5]" />
           Nuevo Cliente
         </button>
       </div>
@@ -98,9 +98,68 @@ export const ClientesView: React.FC<ClientesViewProps> = ({
         />
       </div>
 
-      {/* Table */}
+      {/* Responsive List: Mobile Cards for Phone, Table for Desktop/PC */}
       <div className="bg-white border border-slate-200/90 rounded-2xl overflow-hidden shadow-xs">
-        <div className="overflow-x-auto">
+        
+        {/* Mobile View (Android & iPhone) */}
+        <div className="md:hidden divide-y divide-slate-100">
+          {filtered.length === 0 ? (
+            <div className="py-8 text-center text-slate-400 text-xs">
+              No se encontraron clientes. Presione "Nuevo Cliente".
+            </div>
+          ) : (
+            filtered.map(c => (
+              <div key={c.id} className="p-3.5 flex items-center justify-between gap-3">
+                <div className="min-w-0 flex-1 space-y-1">
+                  <p className="font-bold text-slate-800 text-xs sm:text-sm truncate">
+                    {c.name}
+                  </p>
+                  <div className="flex flex-wrap items-center gap-2 text-[11px] text-slate-500 font-mono">
+                    {c.phone && (
+                      <span className="bg-slate-100 px-2 py-0.5 rounded-md text-slate-700">
+                        📞 {c.phone}
+                      </span>
+                    )}
+                    {c.document && (
+                      <span className="bg-blue-50 text-[#0052cc] px-2 py-0.5 rounded-md">
+                        ID: {c.document}
+                      </span>
+                    )}
+                  </div>
+                  {c.address && (
+                    <p className="text-[11px] text-slate-400 truncate">
+                      📍 {c.address}
+                    </p>
+                  )}
+                </div>
+
+                <div className="flex items-center gap-1 shrink-0">
+                  <button
+                    onClick={() => openEditModal(c)}
+                    className="p-2 text-slate-500 hover:text-blue-600 bg-slate-50 rounded-xl"
+                    title="Editar"
+                  >
+                    <Edit2 className="w-3.5 h-3.5" />
+                  </button>
+                  <button
+                    onClick={() => {
+                      if (window.confirm(`¿Eliminar al cliente "${c.name}"?`)) {
+                        onDeleteClient(c.id);
+                      }
+                    }}
+                    className="p-2 text-slate-500 hover:text-rose-600 bg-slate-50 rounded-xl"
+                    title="Eliminar"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+
+        {/* Desktop View (PC / Tablet) */}
+        <div className="hidden md:block overflow-x-auto">
           <table className="w-full text-left text-xs sm:text-sm">
             <thead className="bg-slate-50 border-b border-slate-200/80 text-slate-600 font-bold uppercase text-[11px] tracking-wider">
               <tr>
@@ -163,24 +222,24 @@ export const ClientesView: React.FC<ClientesViewProps> = ({
         </div>
       </div>
 
-      {/* Modal Cargar / Editar Cliente */}
+      {/* Modal Cargar / Editar Cliente con degradado comercial */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-xs">
-          <div className="bg-white border border-slate-200 rounded-2xl w-full max-w-md p-6 space-y-4 shadow-lg">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-              <h3 className="font-bold text-slate-800 text-base flex items-center gap-2">
-                <Users className="w-4 h-4 text-[#0052cc]" />
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-xs animate-fade-in">
+          <div className="bg-white border border-slate-200 rounded-3xl w-full max-w-md overflow-hidden shadow-2xl animate-scale-up">
+            <div className="bg-gradient-commercial-header text-white px-6 py-4 flex items-center justify-between border-b border-cyan-900/40">
+              <h3 className="font-extrabold text-white text-base flex items-center gap-2">
+                <Users className="w-4 h-4 text-cyan-300" />
                 {editingClient ? 'Editar Cliente' : 'Nuevo Cliente'}
               </h3>
               <button
                 onClick={() => setIsModalOpen(false)}
-                className="text-slate-400 hover:text-slate-600 text-lg font-bold"
+                className="text-slate-300 hover:text-white text-lg font-bold p-1 cursor-pointer"
               >
                 ✕
               </button>
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-4 text-xs sm:text-sm">
+            <form onSubmit={handleSubmit} className="p-6 space-y-4 text-xs sm:text-sm">
               <div>
                 <label className="block font-semibold text-slate-700 mb-1">
                   Nombre Completo / Razón Social *
@@ -240,13 +299,13 @@ export const ClientesView: React.FC<ClientesViewProps> = ({
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
-                  className="px-4 py-2 rounded-xl text-slate-500 hover:bg-slate-100 transition-colors"
+                  className="px-4 py-2.5 rounded-xl text-slate-500 hover:bg-slate-100 transition-colors font-medium cursor-pointer"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 rounded-xl bg-[#0052cc] hover:bg-[#0047b3] text-white font-bold transition-all shadow-xs"
+                  className="px-6 py-2.5 rounded-xl bg-gradient-commercial-btn text-white font-bold transition-all shadow-md cursor-pointer active:scale-98"
                 >
                   Guardar Cliente
                 </button>

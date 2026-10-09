@@ -28,16 +28,16 @@ export const DocumentFormatModal: React.FC<DocumentFormatModalProps> = ({
   const emptyRowsCount = Math.max(0, minRows - document.items.length);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-slate-900/50 backdrop-blur-xs print:p-0 print:bg-white animate-fade-in">
-      <div className="bg-white border border-slate-200 rounded-2xl w-full max-w-3xl overflow-hidden shadow-2xl flex flex-col max-h-[95vh] print:max-h-none print:border-none print:shadow-none">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-slate-950/60 backdrop-blur-xs print:p-0 print:bg-white animate-fade-in">
+      <div className="bg-white border border-slate-200 rounded-3xl w-full max-w-3xl overflow-hidden shadow-2xl flex flex-col max-h-[95vh] print:max-h-none print:border-none print:shadow-none animate-scale-up">
         
-        {/* Modal Toolbar (hidden in print) */}
-        <div className="bg-slate-50 px-5 py-3 border-b border-slate-200 flex items-center justify-between print:hidden">
+        {/* Modal Toolbar con degradado comercial sutil (oculto al imprimir) */}
+        <div className="bg-gradient-commercial-header text-white px-5 py-3.5 border-b border-cyan-900/40 flex items-center justify-between print:hidden">
           <div className="flex items-center gap-2">
-            <span className="text-xs font-bold text-slate-700 uppercase tracking-wider">
+            <span className="text-xs font-bold text-slate-300 uppercase tracking-wider">
               Formato Oficial CREANDO
             </span>
-            <span className="text-xs font-mono font-bold text-[#0052cc]">
+            <span className="text-xs font-mono font-bold text-cyan-300 bg-blue-950/60 px-2 py-0.5 rounded-md border border-cyan-500/30">
               {title} #{document.number}
             </span>
           </div>
@@ -46,7 +46,7 @@ export const DocumentFormatModal: React.FC<DocumentFormatModalProps> = ({
             {isPresupuesto && onConvertToInvoice && (
               <button
                 onClick={() => onConvertToInvoice(document)}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition-all shadow-xs"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition-all shadow-xs cursor-pointer active:scale-98"
                 title="Convertir a Factura"
               >
                 <CheckCircle2 className="w-3.5 h-3.5" />
@@ -56,15 +56,15 @@ export const DocumentFormatModal: React.FC<DocumentFormatModalProps> = ({
 
             <button
               onClick={handlePrint}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#0052cc] hover:bg-[#0047b3] text-white text-xs font-bold transition-all shadow-xs"
+              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-gradient-commercial-btn text-white text-xs font-bold transition-all shadow-md cursor-pointer active:scale-98"
             >
-              <Printer className="w-3.5 h-3.5" />
+              <Printer className="w-3.5 h-3.5 stroke-[2.5]" />
               <span>Imprimir / PDF</span>
             </button>
 
             <button
               onClick={onClose}
-              className="p-1.5 text-slate-400 hover:text-slate-600 rounded-lg transition-colors"
+              className="p-1.5 text-slate-300 hover:text-white rounded-lg transition-colors cursor-pointer"
             >
               <X className="w-4 h-4" />
             </button>

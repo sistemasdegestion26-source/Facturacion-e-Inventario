@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Product, Client, DocumentRecord, ActiveTab } from './types/erp';
 import { storageService } from './services/storageService';
 
@@ -10,10 +10,19 @@ import { PresupuestoView } from './components/PresupuestoView';
 import { FacturacionView } from './components/FacturacionView';
 import { ClientesView } from './components/ClientesView';
 import { DocumentFormatModal } from './components/DocumentFormatModal';
+import { UserProfileModal } from './components/UserProfileModal';
+import { DriveBackupModal } from './components/DriveBackupModal';
 
 export default function App() {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => storageService.getAuth());
   const [currentTab, setCurrentTab] = useState<ActiveTab>('panel');
+  const [isProfileModalOpen, setIsProfileModalOpen] = useState<boolean>(false);
+  const [isDriveModalOpen, setIsDriveModalOpen] = useState<boolean>(false);
+  
+  // Estados para sincronización en tiempo real
+  const [isSynced, setIsSynced] = useState<boolean>(true);
+  const [isSyncing, setIsSyncing] = useState<boolean>(false);
+  const [lastSyncTime, setLastSyncTime] = useState<string>('En vivo');
 
   const [products, setProducts] = useState<Product[]>(() => storageService.getProducts());
   const [clients, setClients] = useState<Client[]>(() => storageService.getClients());
@@ -23,28 +32,150 @@ export default function App() {
   const [initialOpenDocType, setInitialOpenDocType] = useState<'PRESUPUESTO' | 'FACTURACION' | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
-  const showToast = (msg: string) => {
+  // Referencias para control de sincronización y evitar sobreescritura accidental al iniciar
+  const lastSyncedTimestampRef = useRef<number>(0);
+  const isBootstrappedRef = useRef<boolean>(false);
+
+  const showToast = useCallback((msg: string) => {
     setToastMessage(msg);
     setTimeout(() => setToastMessage(null), 3500);
-  };
+  }, []);
 
-  // Sync to storage
-  useEffect(() => {
-    storageService.saveProducts(products);
-  }, [products]);
+  // Función para guardar cambios locales y transmitirlos inmediatamente al servidor
+  const commitData = useCallback((
+    newProducts: Product[],
+    newClients: Client[],
+    newDocs: DocumentRecord[],
+    pass?: string
+  ) => {
+    setProducts(newProducts);
+    setClients(newClients);
+    setDocuments(newDocs);
 
-  useEffect(() => {
-    storageService.saveClients(clients);
-  }, [clients]);
+    storageService.saveProducts(newProducts);
+    storageService.saveClients(newClients);
+    storageService.saveDocuments(newDocs);
 
+    const payload = {
+      products: newProducts,
+      clients: newClients,
+      documents: newDocs,
+      password: pass || storageService.getPassword()
+    };
+
+    setIsSyncing(true);
+    storageService.syncToServer(payload).then(res => {
+      setIsSyncing(false);
+      if (res.success && res.updatedAt) {
+        lastSyncedTimestampRef.current = res.updatedAt;
+        setIsSynced(true);
+        const timeStr = new Date().toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+        setLastSyncTime(timeStr);
+      }
+    });
+  }, []);
+
+  // Sincronización en tiempo real multidispositivo (Teléfono y PC)
+  const syncWithServer = useCallback(async (isManual = false) => {
+    if (isManual) setIsSyncing(true);
+    try {
+      const res = await storageService.syncFromServer();
+      if (res.success && res.data) {
+        const serverTimestamp = res.updatedAt || 0;
+
+        // Si es el primer arranque en este dispositivo, cargamos la base de datos centralizada
+        if (!isBootstrappedRef.current) {
+          isBootstrappedRef.current = true;
+          lastSyncedTimestampRef.current = serverTimestamp;
+
+          if (res.data.products) {
+            setProducts(res.data.products);
+            storageService.saveProducts(res.data.products);
+          }
+          if (res.data.clients) {
+            setClients(res.data.clients);
+            storageService.saveClients(res.data.clients);
+          }
+          if (res.data.documents) {
+            setDocuments(res.data.documents);
+            storageService.saveDocuments(res.data.documents);
+          }
+          if (res.data.password) {
+            storageService.setPassword(res.data.password);
+          }
+          setIsSynced(true);
+          const timeStr = new Date().toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+          setLastSyncTime(timeStr);
+          if (isManual) showToast('Datos sincronizados con éxito.');
+          return;
+        }
+
+        // Si el servidor tiene datos más recientes (cargados desde otro teléfono o PC)
+        if (serverTimestamp > lastSyncedTimestampRef.current) {
+          lastSyncedTimestampRef.current = serverTimestamp;
+
+          if (res.data.products) {
+            setProducts(res.data.products);
+            storageService.saveProducts(res.data.products);
+          }
+          if (res.data.clients) {
+            setClients(res.data.clients);
+            storageService.saveClients(res.data.clients);
+          }
+          if (res.data.documents) {
+            setDocuments(res.data.documents);
+            storageService.saveDocuments(res.data.documents);
+          }
+          if (res.data.password) {
+            storageService.setPassword(res.data.password);
+          }
+
+          setIsSynced(true);
+          const timeStr = new Date().toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+          setLastSyncTime(timeStr);
+          showToast('Actualizado en tiempo real desde otro dispositivo.');
+        } else if (isManual) {
+          showToast('El sistema está al día con la nube.');
+        }
+      }
+    } catch (err) {
+      console.error('Error durante la sincronización:', err);
+    } finally {
+      if (isManual) setIsSyncing(false);
+    }
+  }, [showToast]);
+
+  // Polling automático en tiempo real cada 3 segundos + al reactivar la pestaña en teléfono o PC
   useEffect(() => {
-    storageService.saveDocuments(documents);
-  }, [documents]);
+    syncWithServer(false);
+
+    const interval = setInterval(() => {
+      syncWithServer(false);
+    }, 3000);
+
+    const onFocus = () => syncWithServer(false);
+    const onVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        syncWithServer(false);
+      }
+    };
+
+    window.addEventListener('focus', onFocus);
+    document.addEventListener('visibilitychange', onVisibilityChange);
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('focus', onFocus);
+      document.removeEventListener('visibilitychange', onVisibilityChange);
+    };
+  }, [syncWithServer]);
 
   // Auth Handlers
   const handleLoginSuccess = () => {
     storageService.setAuth(true);
     setIsAuthenticated(true);
+    // Disparar sincronización inmediata al entrar
+    syncWithServer(false);
     showToast('Bienvenido, Hendrick.');
   };
 
@@ -56,57 +187,66 @@ export default function App() {
   // Products Handlers (Solo Descripción y Precio)
   const handleSaveProduct = (product: Product) => {
     const exists = products.some(p => p.id === product.id);
+    let nextProds: Product[];
     if (exists) {
-      setProducts(products.map(p => p.id === product.id ? product : p));
+      nextProds = products.map(p => p.id === product.id ? product : p);
       showToast(`Producto "${product.description}" actualizado.`);
     } else {
-      setProducts([product, ...products]);
+      nextProds = [product, ...products];
       showToast(`Producto "${product.description}" agregado al inventario.`);
     }
+    commitData(nextProds, clients, documents);
   };
 
   const handleDeleteProduct = (productId: string) => {
-    setProducts(products.filter(p => p.id !== productId));
+    const nextProds = products.filter(p => p.id !== productId);
     showToast('Producto eliminado del inventario.');
+    commitData(nextProds, clients, documents);
   };
 
   // Clients Handlers
   const handleSaveClient = (client: Client) => {
     const exists = clients.some(c => c.id === client.id);
+    let nextClients: Client[];
     if (exists) {
-      setClients(clients.map(c => c.id === client.id ? client : c));
+      nextClients = clients.map(c => c.id === client.id ? client : c);
       showToast(`Cliente "${client.name}" actualizado.`);
     } else {
-      setClients([client, ...clients]);
+      nextClients = [client, ...clients];
       showToast(`Cliente "${client.name}" registrado.`);
     }
+    commitData(products, nextClients, documents);
   };
 
   const handleDeleteClient = (clientId: string) => {
-    setClients(clients.filter(c => c.id !== clientId));
+    const nextClients = clients.filter(c => c.id !== clientId);
     showToast('Cliente eliminado.');
+    commitData(products, nextClients, documents);
   };
 
   // Documents Handlers (Presupuesto & Facturación)
   const handleSaveDocument = (doc: DocumentRecord) => {
-    setDocuments([doc, ...documents]);
+    const nextDocs = [doc, ...documents];
     showToast(`${doc.type === 'PRESUPUESTO' ? 'Presupuesto' : 'Factura'} #${doc.number} guardado con éxito.`);
+    commitData(products, clients, nextDocs);
   };
 
   const handleDeleteDocument = (docId: string) => {
-    setDocuments(documents.filter(d => d.id !== docId));
+    const nextDocs = documents.filter(d => d.id !== docId);
     showToast('Documento eliminado.');
+    commitData(products, clients, nextDocs);
   };
 
   const handleToggleInvoiceStatus = (docId: string) => {
-    setDocuments(documents.map(d => {
+    const nextDocs: DocumentRecord[] = documents.map(d => {
       if (d.id === docId) {
-        const nextStatus = d.status === 'PAGADO' ? 'PENDIENTE' : 'PAGADO';
+        const nextStatus: DocumentRecord['status'] = d.status === 'PAGADO' ? 'PENDIENTE' : 'PAGADO';
         return { ...d, status: nextStatus };
       }
       return d;
-    }));
+    });
     showToast('Estado de factura actualizado.');
+    commitData(products, clients, nextDocs);
   };
 
   // Convert Presupuesto to Factura with matching CREANDO format
@@ -139,8 +279,9 @@ export default function App() {
       doc.id === presupuesto.id ? { ...doc, status: 'FACTURADO' as const } : doc
     );
 
-    setDocuments([newInvoice, ...updatedDocs]);
+    const nextDocs = [newInvoice, ...updatedDocs];
     showToast(`Presupuesto #${presupuesto.number} convertido a Factura #${newNumber}.`);
+    commitData(products, clients, nextDocs);
     
     // Si estaba abierto el modal, actualizamos la vista
     if (selectedDocumentForView?.id === presupuesto.id) {
@@ -160,13 +301,20 @@ export default function App() {
     }
   };
 
+  const handleRestoreBackup = (data: { products?: Product[]; clients?: Client[]; documents?: DocumentRecord[] }) => {
+    const nextProds = data.products || products;
+    const nextClients = data.clients || clients;
+    const nextDocs = data.documents || documents;
+    commitData(nextProds, nextClients, nextDocs);
+  };
+
   // If not logged in, render single Login screen
   if (!isAuthenticated) {
     return <LoginView onLoginSuccess={handleLoginSuccess} />;
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-800 flex flex-col font-sans">
+    <div className="min-h-screen bg-gradient-commercial-subtle text-slate-800 flex flex-col font-sans selection:bg-emerald-500/20 selection:text-slate-900">
       
       {/* Soft Header Navbar */}
       <HeaderNav
@@ -176,10 +324,16 @@ export default function App() {
           setCurrentTab(tab);
         }}
         onLogout={handleLogout}
+        onOpenProfile={() => setIsProfileModalOpen(true)}
+        onOpenDriveBackup={() => setIsDriveModalOpen(true)}
+        isSynced={isSynced}
+        isSyncing={isSyncing}
+        onManualSync={() => syncWithServer(true)}
+        lastSyncTime={lastSyncTime}
       />
 
-      {/* Main Content Area */}
-      <main className="flex-1 max-w-6xl w-full mx-auto p-4 sm:p-6 lg:p-8">
+      {/* Main Content Area (con padding inferior para el menú móvil en Android / iPhone) */}
+      <main className="flex-1 max-w-6xl w-full mx-auto p-3 sm:p-6 lg:p-8 pb-24 md:pb-8">
         {currentTab === 'panel' && (
           <PanelView
             products={products}
@@ -243,9 +397,30 @@ export default function App() {
         />
       )}
 
+      {/* User Profile & Password Edit Modal */}
+      {isProfileModalOpen && (
+        <UserProfileModal
+          onClose={() => setIsProfileModalOpen(false)}
+          onSuccess={msg => showToast(msg)}
+        />
+      )}
+
+      {/* Google Drive Backup & Restore Modal */}
+      {isDriveModalOpen && (
+        <DriveBackupModal
+          products={products}
+          clients={clients}
+          documents={documents}
+          onClose={() => setIsDriveModalOpen(false)}
+          onRestoreBackup={handleRestoreBackup}
+          onSuccess={msg => showToast(msg)}
+        />
+      )}
+
       {/* Toast Notification */}
       {toastMessage && (
-        <div className="fixed bottom-5 right-5 z-50 px-4 py-2.5 rounded-xl bg-slate-900 text-white text-xs font-semibold shadow-lg border border-slate-700 animate-fade-in flex items-center gap-2">
+        <div className="fixed bottom-16 md:bottom-5 right-5 z-50 px-4 py-2.5 rounded-xl bg-gradient-commercial-dark text-white text-xs font-semibold shadow-xl border border-cyan-800/40 animate-fade-in flex items-center gap-2">
+          <span className="w-2 h-2 rounded-full bg-emerald-400 shrink-0"></span>
           <span>{toastMessage}</span>
         </div>
       )}

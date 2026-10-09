@@ -4,12 +4,14 @@ interface CreandoLogoProps {
   className?: string;
   size?: 'sm' | 'md' | 'lg';
   showTagline?: boolean;
+  lightText?: boolean;
 }
 
 export const CreandoLogo: React.FC<CreandoLogoProps> = ({ 
   className = '', 
   size = 'md', 
-  showTagline = true 
+  showTagline = true,
+  lightText = false
 }) => {
   const bulbSizes = {
     sm: 'w-10 h-10',
@@ -80,21 +82,21 @@ export const CreandoLogo: React.FC<CreandoLogoProps> = ({
       </div>
 
       {/* Brand Text */}
-      <div className={`font-black tracking-wider text-[#0052cc] uppercase leading-none font-sans ${textSizes[size]}`}>
+      <div className={`font-black tracking-wider uppercase leading-none font-sans ${textSizes[size]} ${lightText ? 'text-white' : 'text-[#0052cc]'}`}>
         CREANDO
       </div>
 
       {showTagline && (
         <>
-          <div className={`text-[#0052cc] font-medium tracking-tight mt-0.5 ${subTextSizes[size]}`}>
+          <div className={`font-medium tracking-tight mt-0.5 ${subTextSizes[size]} ${lightText ? 'text-cyan-200' : 'text-[#0052cc]'}`}>
             HACEMOS REALIDAD TUS IDEAS
           </div>
 
-          <div className="flex items-center gap-1 mt-1 text-[10px] text-slate-500 font-medium">
+          <div className={`flex items-center gap-1 mt-1 text-[10px] font-medium ${lightText ? 'text-slate-300' : 'text-slate-500'}`}>
             <span className="w-3.5 h-3.5 rounded-sm bg-gradient-to-tr from-amber-500 via-rose-500 to-purple-600 flex items-center justify-center text-white text-[8px] font-bold">
               📷
             </span>
-            <span className="text-[#0052cc] font-semibold hover:underline">
+            <span className={`font-semibold hover:underline ${lightText ? 'text-cyan-300' : 'text-[#0052cc]'}`}>
               @creando_tinaquillo
             </span>
           </div>

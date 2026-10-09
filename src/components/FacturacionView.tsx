@@ -154,9 +154,9 @@ export const FacturacionView: React.FC<FacturacionViewProps> = ({
 
         <button
           onClick={() => setIsCreateOpen(true)}
-          className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#0052cc] hover:bg-[#0047b3] text-white text-xs sm:text-sm font-semibold transition-all shadow-xs"
+          className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-gradient-commercial-btn text-white text-xs sm:text-sm font-bold transition-all shadow-md active:scale-98 cursor-pointer"
         >
-          <Plus className="w-4 h-4" />
+          <Plus className="w-4 h-4 stroke-[2.5]" />
           Nueva Factura
         </button>
       </div>
@@ -173,9 +173,78 @@ export const FacturacionView: React.FC<FacturacionViewProps> = ({
         />
       </div>
 
-      {/* Table */}
+      {/* Responsive List: Mobile Cards + Desktop Table */}
       <div className="bg-white border border-slate-200/90 rounded-2xl overflow-hidden shadow-xs">
-        <div className="overflow-x-auto">
+        
+        {/* Mobile View (Android & iPhone) */}
+        <div className="md:hidden divide-y divide-slate-100">
+          {filtered.length === 0 ? (
+            <div className="py-8 text-center text-slate-400 text-xs">
+              No hay facturas registradas.
+            </div>
+          ) : (
+            filtered.map(doc => (
+              <div key={doc.id} className="p-3.5 space-y-2.5">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="font-bold text-[#0052cc] text-xs">
+                      Factura #{doc.number}
+                    </span>
+                    <span className="text-[10px] text-slate-400 font-mono">
+                      {doc.date}
+                    </span>
+                  </div>
+                  <button
+                    onClick={() => onToggleStatus(doc.id)}
+                    className={`text-[10px] font-bold px-2 py-0.5 rounded-full border cursor-pointer ${
+                      doc.status === 'PAGADO'
+                        ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                        : 'bg-amber-50 text-amber-700 border-amber-200'
+                    }`}
+                  >
+                    {doc.status}
+                  </button>
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="font-bold text-slate-800 text-xs">{doc.clientName}</p>
+                    <p className="text-[11px] text-slate-400">{doc.items.length} ítems facturados</p>
+                  </div>
+                  <div className="text-right">
+                    <span className="font-mono font-black text-sm text-slate-900">
+                      ${doc.total.toLocaleString('es-ES', { minimumFractionDigits: 2 })}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-end gap-1.5 pt-1 border-t border-slate-50">
+                  <button
+                    onClick={() => onViewDocument(doc)}
+                    className="flex items-center gap-1 px-2.5 py-1 text-xs font-semibold rounded-lg bg-blue-50 text-[#0052cc]"
+                  >
+                    <Eye className="w-3.5 h-3.5" />
+                    <span>Ver Factura</span>
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      if (window.confirm(`¿Eliminar factura #${doc.number}?`)) {
+                        onDeleteDocument(doc.id);
+                      }
+                    }}
+                    className="p-1 text-slate-400 hover:text-rose-600 rounded-lg"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+
+        {/* Desktop View (PC / Tablet) */}
+        <div className="hidden md:block overflow-x-auto">
           <table className="w-full text-left text-xs sm:text-sm">
             <thead className="bg-slate-50 border-b border-slate-200/80 text-slate-600 font-bold uppercase text-[11px] tracking-wider">
               <tr>
@@ -257,24 +326,24 @@ export const FacturacionView: React.FC<FacturacionViewProps> = ({
         </div>
       </div>
 
-      {/* Modal: Crear Factura */}
+      {/* Modal: Crear Factura con degradado comercial */}
       {isCreateOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/40 backdrop-blur-xs">
-          <div className="bg-white border border-slate-200 rounded-2xl w-full max-w-2xl p-6 space-y-4 shadow-xl max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-              <h3 className="font-bold text-slate-800 text-base flex items-center gap-2">
-                <Receipt className="w-4 h-4 text-[#0052cc]" />
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/60 backdrop-blur-xs animate-fade-in">
+          <div className="bg-white border border-slate-200 rounded-3xl w-full max-w-2xl overflow-hidden shadow-2xl max-h-[90vh] flex flex-col animate-scale-up">
+            <div className="bg-gradient-commercial-header text-white px-6 py-4 flex items-center justify-between border-b border-cyan-900/40">
+              <h3 className="font-extrabold text-white text-base flex items-center gap-2">
+                <Receipt className="w-4 h-4 text-cyan-300" />
                 Nueva Factura
               </h3>
               <button
                 onClick={() => setIsCreateOpen(false)}
-                className="text-slate-400 hover:text-slate-600 text-lg font-bold"
+                className="text-slate-300 hover:text-white text-lg font-bold p-1 cursor-pointer"
               >
                 ✕
               </button>
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-4 text-xs sm:text-sm">
+            <form onSubmit={handleSubmit} className="p-6 space-y-4 text-xs sm:text-sm overflow-y-auto flex-1">
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div className="sm:col-span-2">
                   <label className="block font-semibold text-slate-700 mb-1">
@@ -324,8 +393,8 @@ export const FacturacionView: React.FC<FacturacionViewProps> = ({
                   </button>
                 </div>
 
-                <div className="border border-slate-200 rounded-xl overflow-hidden">
-                  <table className="w-full text-left text-xs">
+                <div className="border border-slate-200 rounded-xl overflow-x-auto">
+                  <table className="w-full min-w-[480px] sm:min-w-full text-left text-xs">
                     <thead className="bg-slate-50 border-b border-slate-200 text-slate-600 uppercase text-[10px] font-bold">
                       <tr>
                         <th className="py-2 px-3">Descripción</th>
@@ -401,25 +470,25 @@ export const FacturacionView: React.FC<FacturacionViewProps> = ({
                 </div>
               </div>
 
-              {/* Total footer */}
-              <div className="flex justify-between items-center p-3 rounded-xl bg-slate-50 border border-slate-200">
-                <span className="font-bold text-slate-600">Total a pagar:</span>
-                <span className="font-black text-lg text-slate-900 font-mono">
+              {/* Total footer con degradado comercial sutil */}
+              <div className="flex justify-between items-center p-3.5 rounded-2xl bg-gradient-to-r from-slate-900/5 via-blue-900/5 to-emerald-900/5 border border-cyan-700/20">
+                <span className="font-bold text-slate-700">Total a pagar:</span>
+                <span className="font-black text-xl text-slate-950 font-mono">
                   ${calculateTotal().toFixed(2)}
                 </span>
               </div>
 
-              <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
+              <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100">
                 <button
                   type="button"
                   onClick={() => setIsCreateOpen(false)}
-                  className="px-4 py-2 rounded-xl text-slate-500 hover:bg-slate-100 transition-colors"
+                  className="px-4 py-2.5 rounded-xl text-slate-500 hover:bg-slate-100 transition-colors font-medium cursor-pointer"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 rounded-xl bg-[#0052cc] hover:bg-[#0047b3] text-white font-bold transition-all shadow-xs"
+                  className="px-6 py-2.5 rounded-xl bg-gradient-commercial-btn text-white font-bold transition-all shadow-md cursor-pointer active:scale-98"
                 >
                   Emitir Factura
                 </button>

@@ -1,1 +1,98 @@
 @import "tailwindcss";
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-8px) rotate(1.5deg);
+  }
+}
+
+@keyframes bounceSlow {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes scaleUp {
+  0% {
+    transform: scale(0.8);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes wave {
+  0%, 100% {
+    transform: rotate(0deg);
+  }
+  20%, 60% {
+    transform: rotate(14deg);
+  }
+  40%, 80% {
+    transform: rotate(-8deg);
+  }
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+.animate-bounce-slow {
+  animation: bounceSlow 2.5s ease-in-out infinite;
+}
+
+.animate-scale-up {
+  animation: scaleUp 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-wave {
+  animation: wave 1.8s ease-in-out infinite;
+  transform-origin: 70% 70%;
+}
+
+/* Soporte para iPhone y Android Notch / Barra inferior */
+.pb-safe {
+  padding-bottom: max(0.6rem, env(safe-area-inset-bottom, 0px));
+}
+
+/* Scroll táctil suave para teléfonos */
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Gradientes comerciales sutiles entre Negro, Azul y Verde */
+.bg-gradient-commercial-dark {
+  background: linear-gradient(135deg, #070c16 0%, #0a2542 50%, #052d24 100%);
+}
+
+.bg-gradient-commercial-header {
+  background: linear-gradient(90deg, #060a12 0%, #0a223c 50%, #052921 100%);
+}
+
+.bg-gradient-commercial-btn {
+  background: linear-gradient(135deg, #090d16 0%, #0052cc 50%, #059669 100%);
+  transition: all 0.25s ease;
+}
+
+.bg-gradient-commercial-btn:hover {
+  background: linear-gradient(135deg, #020617 0%, #0041a3 50%, #047857 100%);
+  box-shadow: 0 4px 14px -2px rgba(0, 82, 204, 0.35);
+}
+
+.bg-gradient-commercial-subtle {
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f6fe 50%, #f0fdf7 100%);
+}
+
+.text-gradient-commercial {
+  background: linear-gradient(135deg, #020617 0%, #0052cc 50%, #059669 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
