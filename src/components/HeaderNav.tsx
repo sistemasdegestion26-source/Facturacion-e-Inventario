@@ -10,7 +10,10 @@ import {
   LogOut,
   CloudUpload,
   RefreshCw,
-  Sparkles
+  Sparkles,
+  Trash2,
+  SlidersHorizontal,
+  RotateCcw
 } from 'lucide-react';
 import simonAvatar from '../assets/simon.jpg';
 
@@ -20,6 +23,7 @@ interface HeaderNavProps {
   onLogout: () => void;
   onOpenProfile: () => void;
   onOpenDriveBackup: () => void;
+  onOpenDataManagement?: () => void;
   isSynced?: boolean;
   isSyncing?: boolean;
   onManualSync?: () => void;
@@ -32,6 +36,7 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
   onLogout,
   onOpenProfile,
   onOpenDriveBackup,
+  onOpenDataManagement,
   isSynced = true,
   isSyncing = false,
   onManualSync,
@@ -47,20 +52,25 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
 
   return (
     <>
-      {/* Header con degradado comercial sutil entre Negro, Azul y Verde */}
-      <header className="bg-gradient-commercial-header text-white sticky top-0 z-30 shadow-md border-b border-cyan-900/35 backdrop-blur-md">
+      {/* Header con colores internos del logo degradado y metalizado */}
+      <header className="bg-metallic-logo-inner text-white sticky top-0 z-30 shadow-lg border-b border-cyan-800/40 backdrop-blur-md sheen-metallic">
         <div className="max-w-6xl mx-auto px-3 sm:px-6">
           <div className="flex items-center justify-between h-14 sm:h-16 gap-2 sm:gap-4">
             
-            {/* Logo Brand */}
-            <div className="flex items-center gap-2 sm:gap-3">
-              <CreandoLogo size="sm" showTagline={false} lightText={true} />
+            {/* Logo CREANDO Prominente con Artwork Metalizado */}
+            <div 
+              onClick={() => onSelectTab('panel')}
+              className="flex items-center gap-2 sm:gap-3 cursor-pointer group select-none"
+            >
+              <div className="p-0.5 rounded-full bg-slate-950 border border-slate-700/80 shadow-md">
+                <CreandoLogo variant="badge" size="xs" className="group-hover:scale-105 transition-transform" />
+              </div>
               <div className="hidden sm:block border-l border-slate-700/80 pl-3">
-                <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block leading-none">
+                <span className="text-[10px] font-extrabold text-cyan-200 uppercase tracking-widest block leading-none">
                   Sistema Administrativo
                 </span>
-                <span className="text-xs font-bold text-cyan-300 mt-0.5 block tracking-wide">
-                  CREANDO
+                <span className="text-xs font-black text-amber-300 mt-0.5 block tracking-wider">
+                  CREANDO • Tinaquillo
                 </span>
               </div>
             </div>
@@ -75,26 +85,26 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
                   <button
                     key={tab.id}
                     onClick={() => onSelectTab(tab.id)}
-                    className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all whitespace-nowrap cursor-pointer ${
+                    className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-extrabold transition-all whitespace-nowrap cursor-pointer ${
                       isActive
-                        ? 'bg-gradient-to-r from-blue-600 via-teal-600 to-emerald-600 text-white shadow-md shadow-blue-950/40 border border-cyan-300/30'
+                        ? 'bg-gradient-to-r from-blue-600 via-teal-600 to-amber-500 text-slate-950 shadow-md border border-amber-300/40'
                         : 'text-slate-300 hover:text-white hover:bg-white/10'
                     }`}
                   >
-                    <Icon className={`w-4 h-4 ${isActive ? 'text-white' : 'text-slate-400'}`} />
+                    <Icon className={`w-4 h-4 ${isActive ? 'text-slate-950' : 'text-slate-400'}`} />
                     <span>{tab.label}</span>
                   </button>
                 );
               })}
             </nav>
 
-            {/* Quick Actions: Sync status, Drive Backup, User & Logout */}
+            {/* Quick Actions: Sync status, Drive Backup, Limpiar Datos, User & Logout */}
             <div className="flex items-center gap-1.5 sm:gap-2">
               
               {/* Real-time Cloud Sync Indicator & Manual Trigger (PC & Mobile) */}
               <button
                 onClick={onManualSync}
-                className="flex items-center gap-1.5 px-2 sm:px-2.5 py-1 rounded-xl bg-emerald-950/70 hover:bg-emerald-900/80 border border-emerald-500/40 text-emerald-300 text-[11px] font-semibold transition-all cursor-pointer shadow-xs"
+                className="flex items-center gap-1.5 px-2 sm:px-2.5 py-1 rounded-xl bg-emerald-950/80 hover:bg-emerald-900 border border-emerald-500/40 text-emerald-300 text-[11px] font-bold transition-all cursor-pointer shadow-xs"
                 title={`Sincronización en tiempo real activa (PC y Móvil). Último: ${lastSyncTime}. Haga clic para sincronizar ahora.`}
               >
                 <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shrink-0"></span>
@@ -104,10 +114,22 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
                 </span>
               </button>
 
+              {/* Botón Limpiar Datos / Gestión */}
+              {onOpenDataManagement && (
+                <button
+                  onClick={onOpenDataManagement}
+                  className="flex items-center gap-1 px-2 sm:px-2.5 py-1.5 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 text-xs font-bold border border-amber-400/30 transition-all cursor-pointer shadow-xs"
+                  title="Limpieza y gestión de datos"
+                >
+                  <RotateCcw className="w-3.5 h-3.5" />
+                  <span className="hidden lg:inline">Limpiar</span>
+                </button>
+              )}
+
               {/* Respaldo para Google Drive Button */}
               <button
                 onClick={onOpenDriveBackup}
-                className="flex items-center gap-1 px-2 sm:px-2.5 py-1.5 rounded-xl bg-gradient-to-r from-blue-900/60 to-emerald-950/60 hover:from-blue-800/80 hover:to-emerald-900/80 text-cyan-200 text-xs font-bold border border-cyan-500/30 transition-all cursor-pointer shadow-xs"
+                className="flex items-center gap-1 px-2 sm:px-2.5 py-1.5 rounded-xl bg-gradient-to-r from-blue-900/70 to-emerald-950/70 hover:from-blue-800 hover:to-emerald-900 text-cyan-200 text-xs font-bold border border-cyan-500/30 transition-all cursor-pointer shadow-xs"
                 title="Respaldar datos para Google Drive"
               >
                 <CloudUpload className="w-3.5 h-3.5 text-cyan-300" />
@@ -123,9 +145,9 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
                 <img
                   src={simonAvatar}
                   alt="Hendrick"
-                  className="w-6 h-6 rounded-full object-cover border border-cyan-400/50 ring-1 ring-emerald-500/30 group-hover:scale-105 transition-transform"
+                  className="w-6 h-6 rounded-full object-cover border border-cyan-400/50 ring-1 ring-amber-400/40 group-hover:scale-105 transition-transform"
                 />
-                <span className="hidden sm:inline text-slate-200 font-medium">Hendrick</span>
+                <span className="hidden sm:inline text-slate-200 font-bold">Hendrick</span>
               </button>
 
               {/* Logout Button */}
@@ -142,39 +164,32 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
         </div>
       </header>
 
-      {/* Mobile Bottom Navigation Bar (Optimizado con degradado comercial y soporte para notch) */}
-      <nav 
-        className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-gradient-commercial-header border-t border-slate-800 text-slate-300 px-2 pt-1.5 shadow-2xl flex items-center justify-around backdrop-blur-md"
-        style={{ paddingBottom: 'max(0.6rem, env(safe-area-inset-bottom, 0px))' }}
-      >
-        {tabs.map(tab => {
-          const Icon = tab.icon;
-          const isActive = currentTab === tab.id;
+      {/* Bottom Navigation Bar for Mobile Phones (Android / iPhone) con colores metalizados */}
+      <div className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-metallic-logo-inner text-white border-t border-cyan-800/40 pb-safe shadow-2xl backdrop-blur-md">
+        <nav className="flex items-center justify-around px-2 py-2">
+          {tabs.map(tab => {
+            const Icon = tab.icon;
+            const isActive = currentTab === tab.id;
 
-          return (
-            <button
-              key={tab.id}
-              onClick={() => onSelectTab(tab.id)}
-              className={`flex flex-col items-center justify-center py-1 px-2 rounded-xl transition-all cursor-pointer min-w-[56px] active:scale-95 ${
-                isActive
-                  ? 'text-cyan-300 font-extrabold'
-                  : 'text-slate-400 hover:text-slate-200 font-medium'
-              }`}
-            >
-              <div className={`p-1 rounded-lg transition-all ${
-                isActive 
-                  ? 'bg-gradient-to-r from-blue-600/40 to-emerald-600/40 text-cyan-300 border border-cyan-400/40 shadow-xs' 
-                  : ''
-              }`}>
-                <Icon className="w-4 h-4" />
-              </div>
-              <span className="text-[10px] tracking-tight leading-none mt-0.5">
-                {tab.label}
-              </span>
-            </button>
-          );
-        })}
-      </nav>
+            return (
+              <button
+                key={tab.id}
+                onClick={() => onSelectTab(tab.id)}
+                className={`flex flex-col items-center justify-center flex-1 py-1 px-1 rounded-xl transition-all cursor-pointer ${
+                  isActive
+                    ? 'text-amber-300 font-bold scale-105'
+                    : 'text-slate-400 hover:text-slate-200 font-medium'
+                }`}
+              >
+                <div className={`p-1 rounded-lg ${isActive ? 'bg-amber-400/20' : ''}`}>
+                  <Icon className="w-4 h-4" />
+                </div>
+                <span className="text-[10px] mt-0.5 leading-none">{tab.label}</span>
+              </button>
+            );
+          })}
+        </nav>
+      </div>
     </>
   );
 };

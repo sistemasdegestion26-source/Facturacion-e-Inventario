@@ -74,21 +74,21 @@
 }
 
 .bg-gradient-commercial-header {
-  background: linear-gradient(90deg, #060a12 0%, #0a223c 50%, #052921 100%);
+  background: linear-gradient(90deg, #050811 0%, #08213b 45%, #04271f 85%, #071018 100%);
 }
 
 .bg-gradient-commercial-btn {
-  background: linear-gradient(135deg, #090d16 0%, #0052cc 50%, #059669 100%);
+  background: linear-gradient(135deg, #090d16 0%, #0052cc 45%, #059669 85%, #d97706 100%);
   transition: all 0.25s ease;
 }
 
 .bg-gradient-commercial-btn:hover {
-  background: linear-gradient(135deg, #020617 0%, #0041a3 50%, #047857 100%);
-  box-shadow: 0 4px 14px -2px rgba(0, 82, 204, 0.35);
+  background: linear-gradient(135deg, #020617 0%, #0041a3 45%, #047857 85%, #b45309 100%);
+  box-shadow: 0 4px 16px -2px rgba(0, 82, 204, 0.4);
 }
 
 .bg-gradient-commercial-subtle {
-  background: linear-gradient(135deg, #f8fafc 0%, #f1f6fe 50%, #f0fdf7 100%);
+  background: linear-gradient(135deg, #f8fafc 0%, #f0f6ff 45%, #effdf7 80%, #fffdf0 100%);
 }
 
 .text-gradient-commercial {
@@ -96,3 +96,55 @@
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
+
+/* Colores de la parte interna del logo (Degradado y Metalizado) */
+/* Filamento dorado/ámbar, espiral verde esmeralda y reflejo azul metálico */
+.bg-metallic-logo-inner {
+  background: linear-gradient(135deg, #070d18 0%, #04385a 28%, #065f46 56%, #b45309 82%, #fbbf24 100%);
+}
+
+.bg-metallic-gold {
+  background: linear-gradient(135deg, #92400e 0%, #f59e0b 35%, #fef08a 52%, #d97706 78%, #78350f 100%);
+}
+
+.bg-metallic-emerald {
+  background: linear-gradient(135deg, #064e3b 0%, #059669 35%, #34d399 55%, #0d9488 78%, #022c22 100%);
+}
+
+.bg-metallic-blue {
+  background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 32%, #0284c7 60%, #38bdf8 82%, #e2e8f0 100%);
+}
+
+.text-metallic-logo {
+  background: linear-gradient(135deg, #0052cc 0%, #0d9488 40%, #f59e0b 75%, #fbbf24 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.border-metallic-subtle {
+  border: 1px solid rgba(56, 189, 248, 0.25);
+  box-shadow: 0 0 16px -4px rgba(13, 148, 136, 0.2), 0 0 10px -3px rgba(245, 158, 11, 0.15);
+}
+
+.sheen-metallic {
+  position: relative;
+  overflow: hidden;
+}
+
+.sheen-metallic::after {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -60%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(
+    60deg,
+    transparent 35%,
+    rgba(255, 255, 255, 0.18) 50%,
+    transparent 65%
+  );
+  pointer-events: none;
+  transform: rotate(25deg);
+}
+

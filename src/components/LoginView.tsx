@@ -54,13 +54,18 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
         <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-600/20 rounded-full blur-3xl pointer-events-none -z-10 animate-pulse"></div>
         <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-emerald-500/20 rounded-full blur-3xl pointer-events-none -z-10"></div>
         
-        <div className="w-full max-w-sm bg-white/95 backdrop-blur-md border border-cyan-500/30 rounded-3xl shadow-2xl p-8 text-center space-y-5 animate-scale-up relative overflow-hidden">
-          {/* Barra superior con degradado comercial sutil */}
-          <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-slate-950 via-[#0052cc] to-[#059669]"></div>
+        <div className="w-full max-w-sm bg-white/95 backdrop-blur-md border border-cyan-500/40 rounded-3xl shadow-2xl p-6 sm:p-8 text-center space-y-4 animate-scale-up relative overflow-hidden">
+          {/* Barra superior con los colores internos del logo degradado y metalizado */}
+          <div className="absolute top-0 left-0 right-0 h-1.5 bg-metallic-logo-inner"></div>
 
-          {/* Imagen animada saludando */}
-          <div className="relative mx-auto w-48 h-64 sm:w-56 sm:h-72 flex items-center justify-center">
-            <div className="absolute inset-0 bg-gradient-to-tr from-blue-500/30 via-emerald-400/20 to-slate-900/10 rounded-full blur-2xl scale-95 pointer-events-none -z-10"></div>
+          {/* Logo CREANDO en la pantalla de bienvenida (Emblema exacto de la imagen adjunta) */}
+          <div className="flex justify-center pt-1">
+            <CreandoLogo variant="badge" size="sm" />
+          </div>
+
+          {/* Imagen animada saludando con halo degradado metalizado */}
+          <div className="relative mx-auto w-36 h-48 sm:w-44 sm:h-56 flex items-center justify-center">
+            <div className="absolute inset-0 bg-gradient-to-tr from-amber-400/30 via-emerald-400/30 to-blue-600/30 rounded-full blur-2xl scale-95 pointer-events-none -z-10"></div>
             <img
               src={simonAvatar}
               alt="Simon Chipmunk saludando"
@@ -69,13 +74,13 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
           </div>
 
           {/* Mensaje de saludo: Hola Hendrick */}
-          <div className="space-y-2">
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-gradient-to-r from-slate-900 via-blue-900 to-emerald-900 border border-cyan-500/30 text-cyan-200 text-xs font-bold uppercase tracking-wider shadow-sm">
-              <Sparkles className="w-3.5 h-3.5 text-emerald-400 animate-spin" />
+          <div className="space-y-1.5">
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-metallic-logo-inner border border-cyan-400/40 text-amber-300 text-[11px] font-black uppercase tracking-wider shadow-sm sheen-metallic">
+              <Sparkles className="w-3.5 h-3.5 text-amber-300 animate-spin" />
               <span>Acceso Autorizado</span>
             </div>
 
-            <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight flex items-center justify-center gap-2">
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight flex items-center justify-center gap-2">
               <span>Hola Hendrick</span>
               <span className="inline-block animate-wave text-2xl">✌️</span>
             </h1>
@@ -87,7 +92,7 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
 
           {/* Barra de progreso con degradado comercial azul, verde y negro */}
           <div className="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden">
-            <div className="bg-gradient-to-r from-slate-950 via-[#0052cc] to-[#059669] h-full rounded-full transition-all duration-2000 w-full animate-pulse"></div>
+            <div className="bg-metallic-logo-inner h-full rounded-full transition-all duration-2000 w-full animate-pulse"></div>
           </div>
         </div>
 
@@ -104,15 +109,22 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
       <div className="absolute -top-24 -left-24 w-96 h-96 bg-blue-600/15 rounded-full blur-3xl pointer-events-none"></div>
       <div className="absolute -bottom-24 -right-24 w-96 h-96 bg-emerald-500/15 rounded-full blur-3xl pointer-events-none"></div>
       
-      {/* Container with soft subtle borders & shadows */}
-      <div className="w-full max-w-md bg-white/95 backdrop-blur-md border border-slate-200/90 rounded-3xl shadow-2xl p-8 space-y-6 relative overflow-hidden">
-        
-        {/* Barra superior con degradado sutil comercial: Negro -> Azul -> Verde */}
-        <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-slate-950 via-[#0052cc] to-[#059669]"></div>
+      {/* Marca de agua sutil del logo en el fondo */}
+      <div className="absolute right-10 bottom-10 opacity-10 pointer-events-none hidden lg:block scale-125">
+        <CreandoLogo variant="badge" size="xl" />
+      </div>
 
-        {/* Brand Logo */}
-        <div className="flex justify-center pb-2 pt-1">
-          <CreandoLogo size="lg" />
+      {/* Container with soft subtle borders & shadows */}
+      <div className="w-full max-w-md bg-white/95 backdrop-blur-md border border-slate-200/90 rounded-3xl shadow-2xl p-7 sm:p-8 space-y-5 relative overflow-hidden">
+        
+        {/* Barra superior con los colores internos del logo degradado y metalizado */}
+        <div className="absolute top-0 left-0 right-0 h-1.5 bg-metallic-logo-inner"></div>
+
+        {/* Brand Logo Prominente - Exacto a la imagen adjunta por el usuario */}
+        <div className="flex justify-center pb-1 pt-1">
+          <div className="p-1 rounded-full bg-slate-950 shadow-xl border border-slate-800/80 ring-4 ring-cyan-500/10 hover:ring-cyan-500/30 transition-all">
+            <CreandoLogo variant="badge" size="lg" />
+          </div>
         </div>
 
         <div className="text-center space-y-1">
@@ -143,7 +155,7 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
                 placeholder="Nombre de usuario"
                 value={username}
                 onChange={e => setUsername(e.target.value)}
-                className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-9 pr-3 py-2.5 text-sm text-slate-800 focus:bg-white focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all"
+                className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-9 pr-3 py-2.5 text-sm text-slate-800 focus:bg-white focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all font-bold"
                 required
               />
             </div>
@@ -166,13 +178,13 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
             </div>
           </div>
 
-          {/* Botón con degradado comercial sutil entre negro, azul y verde */}
+          {/* Botón con degradado metalizado comercial */}
           <button
             type="submit"
-            className="w-full py-3 px-4 bg-gradient-commercial-btn text-white font-bold text-sm rounded-xl transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer active:scale-98"
+            className="w-full py-3 px-4 bg-metallic-logo-inner text-white font-extrabold text-sm rounded-2xl transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer active:scale-98 border border-cyan-400/30 sheen-metallic"
           >
             <span>Acceder al Sistema</span>
-            <ArrowRight className="w-4 h-4" />
+            <ArrowRight className="w-4 h-4 stroke-[2.5]" />
           </button>
         </form>
 

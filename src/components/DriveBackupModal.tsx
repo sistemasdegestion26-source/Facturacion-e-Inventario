@@ -17,6 +17,7 @@ import {
   Info
 } from 'lucide-react';
 import { Product, Client, DocumentRecord } from '../types/erp';
+import { CreandoLogo } from './CreandoLogo';
 
 interface DriveBackupModalProps {
   products: Product[];
@@ -177,20 +178,18 @@ export const DriveBackupModal: React.FC<DriveBackupModalProps> = ({
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/60 backdrop-blur-xs animate-fade-in">
       <div className="bg-white border border-slate-200 rounded-3xl w-full max-w-lg overflow-hidden shadow-2xl animate-scale-up max-h-[92vh] flex flex-col">
         
-        {/* Header con degradado comercial sutil */}
-        <div className="bg-gradient-commercial-header text-white px-6 py-4 flex items-center justify-between border-b border-cyan-900/40">
+        {/* Header con colores internos del logo degradado y metalizado */}
+        <div className="bg-metallic-logo-inner text-white px-6 py-4 flex items-center justify-between border-b border-cyan-800/40 sheen-metallic">
           <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-blue-900/60 to-emerald-950/60 flex items-center justify-center border border-cyan-400/30">
-              <CloudUpload className="w-5 h-5 text-cyan-300" />
-            </div>
+            <CreandoLogo size="xs" variant="icon" />
             <div>
               <h3 className="font-extrabold text-white text-sm sm:text-base flex items-center gap-1.5">
                 <span>Respaldo en Google Drive</span>
-                <span className="text-[10px] bg-gradient-to-r from-blue-900/80 to-emerald-900/80 text-cyan-200 font-mono px-2 py-0.5 rounded-full font-bold border border-cyan-500/30">
+                <span className="text-[10px] bg-metallic-gold text-slate-950 font-black px-2 py-0.5 rounded-full shadow-xs">
                   Nube
                 </span>
               </h3>
-              <p className="text-[11px] text-cyan-100/70">
+              <p className="text-[11px] text-cyan-200">
                 Guarda tus datos en la nube y accede desde tu teléfono o PC
               </p>
             </div>

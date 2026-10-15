@@ -1,6 +1,21 @@
 import React, { useState } from 'react';
 import { DocumentRecord, Product, Client, DocumentItem } from '../types/erp';
-import { Receipt, Plus, Search, Eye, Trash2, CheckCircle2 } from 'lucide-react';
+import { CreandoLogo } from './CreandoLogo';
+import { 
+  Receipt, 
+  Plus, 
+  Search, 
+  Eye, 
+  Trash2, 
+  CheckCircle2, 
+  Edit2,
+  X,
+  RotateCcw,
+  Sparkles,
+  Calendar,
+  CreditCard,
+  DollarSign
+} from 'lucide-react';
 
 interface FacturacionViewProps {
   documents: DocumentRecord[];
@@ -25,11 +40,16 @@ export const FacturacionView: React.FC<FacturacionViewProps> = ({
 }) => {
   const facturas = documents.filter(d => d.type === 'FACTURACION');
   const [search, setSearch] = useState('');
-  const [isCreateOpen, setIsCreateOpen] = useState(initialOpenCreate);
+  const [filterStatus, setFilterStatus] = useState<'all' | 'PAGADO' | 'PENDIENTE'>('all');
+
+  // Modal states: Creation & Editing
+  const [isModalOpen, setIsModalOpen] = useState(initialOpenCreate);
+  const [editingDoc, setEditingDoc] = useState<DocumentRecord | null>(null);
 
   // Form states
   const [clientName, setClientName] = useState(clients[0]?.name || '');
   const [clientPhone, setClientPhone] = useState(clients[0]?.phone || '');
+  const [status, setStatus] = useState<'PAGADO' | 'PENDIENTE'>('PAGADO');
   const [date, setDate] = useState(() => {
     const today = new Date();
     const d = String(today.getDate()).padStart(2, '0');
@@ -50,6 +70,52 @@ export const FacturacionView: React.FC<FacturacionViewProps> = ({
     }
   ]);
 
+  const openNewModal = () => {
+    setEditingDoc(null);
+    setClientName(clients[0]?.name || '');
+    setClientPhone(clients[0]?.phone || '');
+    setStatus('PAGADO');
+    const today = new Date();
+    const d = String(today.getDate()).padStart(2, '0');
+    const m = String(today.getMonth() + 1).padStart(2, '0');
+    const y = today.getFullYear();
+    setDate(`${d}/${m}/${y}`);
+    setItems([
+      {
+        description: products[0]?.description || 'CARNETS SUBLIMADOS CON ACCESORIOS',
+        quantity: 100,
+        unitPrice: products[0]?.price || 5.0
+      }
+    ]);
+    setIsModalOpen(true);
+  };
+
+  const openEditModal = (doc: DocumentRecord) => {
+    setEditingDoc(doc);
+    setClientName(doc.clientName);
+    setClientPhone(doc.clientPhone || '');
+    setDate(doc.date);
+    setStatus(doc.status === 'PENDIENTE' ? 'PENDIENTE' : 'PAGADO');
+    setItems(doc.items.map(it => ({
+      description: it.description,
+      quantity: it.quantity,
+      unitPrice: it.unitPrice
+    })));
+    setIsModalOpen(true);
+  };
+
+  const clearForm = () => {
+    setClientName('');
+    setClientPhone('');
+    setItems([
+      {
+        description: '',
+        quantity: 1,
+        unitPrice: 0
+      }
+    ]);
+  };
+
   const handleSelectClient = (cName: string) => {
     setClientName(cName);
     const c = clients.find(cl => cl.name === cName);
@@ -64,6 +130,17 @@ export const FacturacionView: React.FC<FacturacionViewProps> = ({
         description: firstProd?.description || '',
         quantity: 1,
         unitPrice: firstProd?.price || 0
+      }
+    ]);
+  };
+
+  const handleQuickAddProduct = (prod: Product) => {
+    setItems([
+      ...items,
+      {
+        description: prod.description,
+        quantity: 1,
+        unitPrice: prod.price
       }
     ]);
   };
@@ -103,8 +180,9 @@ export const FacturacionView: React.FC<FacturacionViewProps> = ({
     if (!clientName.trim() || items.length === 0) return;
 
     const total = calculateTotal();
-    const nextSeq = facturas.length + 1;
-    const number = String(nextSeq).padStart(3, '0');
+    const number = editingDoc 
+      ? editingDoc.number 
+      : String(facturas.length + 1).padStart(3, '0');
 
     const newDocItems: DocumentItem[] = items.map((it, idx) => ({
       id: `it-${Date.now()}-${idx}`,
@@ -114,80 +192,160 @@ export const FacturacionView: React.FC<FacturacionViewProps> = ({
       total: it.quantity * it.unitPrice
     }));
 
-    const newDoc: DocumentRecord = {
-      id: `doc-${Date.now()}`,
+    const docToSave: DocumentRecord = {
+      id: editingDoc ? editingDoc.id : `doc-${Date.now()}`,
       type: 'FACTURACION',
       number,
       date,
-      clientName,
-      clientPhone,
+      clientName: clientName.trim(),
+      clientPhone: clientPhone.trim(),
       items: newDocItems,
       subtotal: total,
       total,
-      status: 'PAGADO',
-      createdAt: new Date().toISOString()
+      status,
+      createdAt: editingDoc ? editingDoc.createdAt : new Date().toISOString()
     };
 
-    onSaveDocument(newDoc);
-    setIsCreateOpen(false);
+    onSaveDocument(docToSave);
+    setIsModalOpen(false);
   };
 
-  const filtered = facturas.filter(d =>
+  // Consultas y Filtros Simplificados
+  let filtered = facturas.filter(d =>
     d.clientName.toLowerCase().includes(search.toLowerCase()) ||
-    d.number.includes(search)
+    d.number.includes(search) ||
+    (d.clientPhone && d.clientPhone.includes(search))
   );
+
+  if (filterStatus !== 'all') {
+    filtered = filtered.filter(d => d.status === filterStatus);
+  }
+
+  const hasActiveFilters = search.trim() !== '' || filterStatus !== 'all';
 
   return (
     <div className="space-y-6">
       
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2">
-            <Receipt className="w-5 h-5 text-[#0052cc]" />
-            Facturación
-          </h2>
-          <p className="text-xs text-slate-500 mt-0.5">
-            Registro, cobro y emisión de facturas oficiales con formato CREANDO
-          </p>
+      {/* Header con Logo CREANDO y colores metalizados */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white/80 p-4 sm:p-5 rounded-3xl border border-slate-200/90 shadow-xs backdrop-blur-xs">
+        <div className="flex items-center gap-3">
+          <CreandoLogo size="sm" variant="icon" />
+          <div>
+            <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2">
+              <span>Facturación CREANDO</span>
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+                {facturas.length} facturas
+              </span>
+            </h2>
+            <p className="text-xs text-slate-500 mt-0.5">
+              Registro simplificado de facturas oficiales • Edición de datos cargados y control de cobro
+            </p>
+          </div>
         </div>
 
         <button
-          onClick={() => setIsCreateOpen(true)}
-          className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-gradient-commercial-btn text-white text-xs sm:text-sm font-bold transition-all shadow-md active:scale-98 cursor-pointer"
+          onClick={openNewModal}
+          className="flex items-center justify-center gap-2 px-5 py-2.5 rounded-2xl bg-metallic-logo-inner hover:opacity-95 text-white text-xs sm:text-sm font-extrabold transition-all shadow-md active:scale-98 cursor-pointer border border-cyan-400/30 sheen-metallic"
         >
-          <Plus className="w-4 h-4 stroke-[2.5]" />
-          Nueva Factura
+          <Plus className="w-4 h-4 stroke-[3]" />
+          <span>+ Nueva Factura</span>
         </button>
       </div>
 
-      {/* Search */}
-      <div className="relative max-w-md">
-        <Search className="w-4 h-4 absolute left-3 top-3 text-slate-400" />
-        <input
-          type="text"
-          placeholder="Buscar por cliente o N°..."
-          value={search}
-          onChange={e => setSearch(e.target.value)}
-          className="w-full bg-white border border-slate-200 rounded-xl pl-9 pr-4 py-2 text-xs sm:text-sm text-slate-800 focus:outline-none focus:border-blue-500 shadow-xs"
-        />
+      {/* Consultas y Filtros */}
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-white p-3 sm:p-3.5 rounded-2xl border border-slate-200/90 shadow-xs">
+        
+        {/* Search Bar */}
+        <div className="relative flex-1 max-w-md">
+          <Search className="w-4 h-4 absolute left-3 top-3 text-slate-400" />
+          <input
+            type="text"
+            placeholder="Consultar factura por cliente o N°..."
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-9 pr-9 py-2 text-xs sm:text-sm text-slate-800 focus:bg-white focus:outline-none focus:border-blue-500 shadow-xs"
+          />
+          {search && (
+            <button
+              onClick={() => setSearch('')}
+              className="absolute right-2.5 top-2.5 text-slate-400 hover:text-slate-600 p-0.5 rounded-md text-xs cursor-pointer"
+              title="Limpiar consulta"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          )}
+        </div>
+
+        {/* Filter Pills */}
+        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 text-xs">
+          <button
+            onClick={() => setFilterStatus('all')}
+            className={`px-3 py-1.5 rounded-xl font-bold transition-all whitespace-nowrap cursor-pointer ${
+              filterStatus === 'all'
+                ? 'bg-slate-900 text-white shadow-xs'
+                : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+            }`}
+          >
+            Todas ({facturas.length})
+          </button>
+          <button
+            onClick={() => setFilterStatus('PAGADO')}
+            className={`px-3 py-1.5 rounded-xl font-bold transition-all whitespace-nowrap cursor-pointer ${
+              filterStatus === 'PAGADO'
+                ? 'bg-emerald-600 text-white shadow-xs'
+                : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+            }`}
+          >
+            Pagadas
+          </button>
+          <button
+            onClick={() => setFilterStatus('PENDIENTE')}
+            className={`px-3 py-1.5 rounded-xl font-bold transition-all whitespace-nowrap cursor-pointer ${
+              filterStatus === 'PENDIENTE'
+                ? 'bg-amber-500 text-slate-950 shadow-xs'
+                : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+            }`}
+          >
+            Pendientes
+          </button>
+
+          {hasActiveFilters && (
+            <button
+              onClick={() => {
+                setSearch('');
+                setFilterStatus('all');
+              }}
+              className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-rose-600 hover:bg-rose-50 font-bold transition-colors cursor-pointer text-xs"
+              title="Limpiar filtros"
+            >
+              <RotateCcw className="w-3.5 h-3.5" />
+              <span>Limpiar</span>
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Responsive List: Mobile Cards + Desktop Table */}
-      <div className="bg-white border border-slate-200/90 rounded-2xl overflow-hidden shadow-xs">
+      <div className="bg-white border border-slate-200/90 rounded-3xl overflow-hidden shadow-xs">
         
         {/* Mobile View (Android & iPhone) */}
         <div className="md:hidden divide-y divide-slate-100">
           {filtered.length === 0 ? (
-            <div className="py-8 text-center text-slate-400 text-xs">
-              No hay facturas registradas.
+            <div className="py-12 px-4 text-center">
+              <CreandoLogo size="sm" variant="icon" className="opacity-40 mb-2" />
+              <p className="text-slate-500 font-bold text-sm">
+                No hay facturas registradas
+              </p>
+              <p className="text-slate-400 text-xs mt-1">
+                {hasActiveFilters ? 'Pruebe limpiando la búsqueda.' : 'Presione "Nueva Factura" para emitir la primera.'}
+              </p>
             </div>
           ) : (
             filtered.map(doc => (
-              <div key={doc.id} className="p-3.5 space-y-2.5">
+              <div key={doc.id} className="p-4 space-y-2.5">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <span className="font-bold text-[#0052cc] text-xs">
+                    <span className="font-extrabold text-[#0052cc] text-xs">
                       Factura #{doc.number}
                     </span>
                     <span className="text-[10px] text-slate-400 font-mono">
@@ -196,11 +354,12 @@ export const FacturacionView: React.FC<FacturacionViewProps> = ({
                   </div>
                   <button
                     onClick={() => onToggleStatus(doc.id)}
-                    className={`text-[10px] font-bold px-2 py-0.5 rounded-full border cursor-pointer ${
+                    className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full border cursor-pointer transition-colors ${
                       doc.status === 'PAGADO'
                         ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
                         : 'bg-amber-50 text-amber-700 border-amber-200'
                     }`}
+                    title="Clic para cambiar estado"
                   >
                     {doc.status}
                   </button>
@@ -218,14 +377,26 @@ export const FacturacionView: React.FC<FacturacionViewProps> = ({
                   </div>
                 </div>
 
-                <div className="flex items-center justify-end gap-1.5 pt-1 border-t border-slate-50">
-                  <button
-                    onClick={() => onViewDocument(doc)}
-                    className="flex items-center gap-1 px-2.5 py-1 text-xs font-semibold rounded-lg bg-blue-50 text-[#0052cc]"
-                  >
-                    <Eye className="w-3.5 h-3.5" />
-                    <span>Ver Factura</span>
-                  </button>
+                <div className="flex items-center justify-between pt-2 border-t border-slate-50">
+                  <div className="flex items-center gap-1.5">
+                    {/* Botón Editar Datos Cargados */}
+                    <button
+                      onClick={() => openEditModal(doc)}
+                      className="flex items-center gap-1 px-2.5 py-1 text-xs font-bold rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 cursor-pointer"
+                      title="Editar factura cargada"
+                    >
+                      <Edit2 className="w-3.5 h-3.5 text-blue-600" />
+                      <span>Editar</span>
+                    </button>
+
+                    <button
+                      onClick={() => onViewDocument(doc)}
+                      className="flex items-center gap-1 px-2.5 py-1 text-xs font-semibold rounded-lg bg-blue-50 text-[#0052cc] cursor-pointer"
+                    >
+                      <Eye className="w-3.5 h-3.5" />
+                      <span>Ver Factura</span>
+                    </button>
+                  </div>
 
                   <button
                     onClick={() => {
@@ -233,7 +404,8 @@ export const FacturacionView: React.FC<FacturacionViewProps> = ({
                         onDeleteDocument(doc.id);
                       }
                     }}
-                    className="p-1 text-slate-400 hover:text-rose-600 rounded-lg"
+                    className="p-1 text-slate-400 hover:text-rose-600 rounded-lg cursor-pointer"
+                    title="Eliminar"
                   >
                     <Trash2 className="w-3.5 h-3.5" />
                   </button>
@@ -246,46 +418,47 @@ export const FacturacionView: React.FC<FacturacionViewProps> = ({
         {/* Desktop View (PC / Tablet) */}
         <div className="hidden md:block overflow-x-auto">
           <table className="w-full text-left text-xs sm:text-sm">
-            <thead className="bg-slate-50 border-b border-slate-200/80 text-slate-600 font-bold uppercase text-[11px] tracking-wider">
+            <thead className="bg-slate-50 border-b border-slate-200/80 text-slate-600 font-extrabold uppercase text-[11px] tracking-wider">
               <tr>
-                <th className="py-3 px-4">N° Factura</th>
-                <th className="py-3 px-4">Fecha</th>
-                <th className="py-3 px-4">Cliente</th>
-                <th className="py-3 px-4 text-center">Ítems</th>
-                <th className="py-3 px-4 text-right">Total a Pagar</th>
-                <th className="py-3 px-4 text-center">Estado</th>
-                <th className="py-3 px-4 text-center w-32">Acciones</th>
+                <th className="py-3.5 px-5">N° Factura</th>
+                <th className="py-3.5 px-4">Fecha</th>
+                <th className="py-3.5 px-4">Cliente</th>
+                <th className="py-3.5 px-4 text-center">Ítems</th>
+                <th className="py-3.5 px-4 text-right">Total a Pagar</th>
+                <th className="py-3.5 px-4 text-center">Estado (Cobro)</th>
+                <th className="py-3.5 px-5 text-center w-36">Acciones</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 text-slate-700">
               {filtered.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="py-8 text-center text-slate-400 text-xs">
-                    No hay facturas registradas.
+                  <td colSpan={7} className="py-12 text-center text-slate-400 text-xs">
+                    <CreandoLogo size="sm" variant="icon" className="opacity-40 mb-2 inline-block" />
+                    <p className="font-bold text-slate-600">No hay facturas que coincidan con la búsqueda.</p>
                   </td>
                 </tr>
               ) : (
                 filtered.map(doc => (
-                  <tr key={doc.id} className="hover:bg-slate-50/70 transition-colors">
-                    <td className="py-3 px-4 font-bold text-[#0052cc]">
+                  <tr key={doc.id} className="hover:bg-slate-50/80 transition-colors">
+                    <td className="py-3.5 px-5 font-black text-[#0052cc]">
                       #{doc.number}
                     </td>
-                    <td className="py-3 px-4 text-slate-500 text-xs font-mono">
+                    <td className="py-3.5 px-4 text-slate-500 text-xs font-mono">
                       {doc.date}
                     </td>
-                    <td className="py-3 px-4 font-semibold text-slate-800">
+                    <td className="py-3.5 px-4 font-bold text-slate-900">
                       {doc.clientName}
                     </td>
-                    <td className="py-3 px-4 text-center text-slate-500 text-xs">
+                    <td className="py-3.5 px-4 text-center text-slate-500 text-xs font-mono">
                       {doc.items.length}
                     </td>
-                    <td className="py-3 px-4 text-right font-mono font-bold text-slate-900">
+                    <td className="py-3.5 px-4 text-right font-mono font-black text-slate-900">
                       ${doc.total.toLocaleString('es-ES', { minimumFractionDigits: 2 })}
                     </td>
-                    <td className="py-3 px-4 text-center">
+                    <td className="py-3.5 px-4 text-center">
                       <button
                         onClick={() => onToggleStatus(doc.id)}
-                        className={`text-[11px] font-semibold px-2.5 py-0.5 rounded-full border cursor-pointer transition-colors ${
+                        className={`text-[11px] font-bold px-2.5 py-0.5 rounded-full border cursor-pointer transition-colors ${
                           doc.status === 'PAGADO'
                             ? 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100'
                             : 'bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100'
@@ -295,12 +468,22 @@ export const FacturacionView: React.FC<FacturacionViewProps> = ({
                         {doc.status}
                       </button>
                     </td>
-                    <td className="py-3 px-4 text-center">
+                    <td className="py-3.5 px-5 text-center">
                       <div className="flex items-center justify-center gap-1.5">
+                        
+                        {/* Botón Editar Datos Cargados */}
+                        <button
+                          onClick={() => openEditModal(doc)}
+                          className="p-1.5 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-lg transition-colors cursor-pointer"
+                          title="Editar factura cargada"
+                        >
+                          <Edit2 className="w-3.5 h-3.5" />
+                        </button>
+
                         <button
                           onClick={() => onViewDocument(doc)}
-                          className="p-1.5 text-slate-400 hover:text-[#0052cc] hover:bg-blue-50 rounded-lg transition-colors"
-                          title="Ver Formato Oficial / Imprimir"
+                          className="p-1.5 text-slate-500 hover:text-[#0052cc] hover:bg-blue-50 rounded-lg transition-colors cursor-pointer"
+                          title="Ver Factura Oficial / Imprimir"
                         >
                           <Eye className="w-4 h-4" />
                         </button>
@@ -311,7 +494,7 @@ export const FacturacionView: React.FC<FacturacionViewProps> = ({
                               onDeleteDocument(doc.id);
                             }
                           }}
-                          className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
+                          className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
                           title="Eliminar"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
@@ -326,173 +509,237 @@ export const FacturacionView: React.FC<FacturacionViewProps> = ({
         </div>
       </div>
 
-      {/* Modal: Crear Factura con degradado comercial */}
-      {isCreateOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/60 backdrop-blur-xs animate-fade-in">
-          <div className="bg-white border border-slate-200 rounded-3xl w-full max-w-2xl overflow-hidden shadow-2xl max-h-[90vh] flex flex-col animate-scale-up">
-            <div className="bg-gradient-commercial-header text-white px-6 py-4 flex items-center justify-between border-b border-cyan-900/40">
-              <h3 className="font-extrabold text-white text-base flex items-center gap-2">
-                <Receipt className="w-4 h-4 text-cyan-300" />
-                Nueva Factura
-              </h3>
+      {/* Modal: Crear / Editar Factura con degradado metalizado */}
+      {isModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/70 backdrop-blur-xs animate-fade-in">
+          <div className="bg-white border border-slate-200 rounded-3xl w-full max-w-2xl overflow-hidden shadow-2xl flex flex-col max-h-[92vh] animate-scale-up">
+            
+            {/* Header con colores internos del logo degradado y metalizado */}
+            <div className="bg-metallic-logo-inner text-white px-6 py-4 flex items-center justify-between border-b border-cyan-800/40 shrink-0">
+              <div className="flex items-center gap-2.5">
+                <CreandoLogo size="xs" variant="icon" />
+                <div>
+                  <h3 className="font-extrabold text-white text-base">
+                    {editingDoc ? `Editar Factura #${editingDoc.number}` : 'Nueva Factura Oficial CREANDO'}
+                  </h3>
+                  <p className="text-[11px] text-cyan-200">
+                    Emisión simplificada con formato oficial y cálculo automático
+                  </p>
+                </div>
+              </div>
               <button
-                onClick={() => setIsCreateOpen(false)}
+                onClick={() => setIsModalOpen(false)}
                 className="text-slate-300 hover:text-white text-lg font-bold p-1 cursor-pointer"
               >
                 ✕
               </button>
             </div>
 
-            <form onSubmit={handleSubmit} className="p-6 space-y-4 text-xs sm:text-sm overflow-y-auto flex-1">
+            <form onSubmit={handleSubmit} className="p-5 sm:p-6 overflow-y-auto space-y-4 text-xs sm:text-sm">
+              
+              {/* Cliente y Fecha */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <div className="sm:col-span-2">
-                  <label className="block font-semibold text-slate-700 mb-1">
-                    Cliente *
-                  </label>
-                  <div className="flex gap-2">
-                    <input
-                      type="text"
-                      list="clients-list-inv"
-                      placeholder="Nombre del cliente..."
-                      value={clientName}
-                      onChange={e => handleSelectClient(e.target.value)}
-                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-800 focus:bg-white focus:outline-none focus:border-blue-500"
-                      required
-                    />
-                    <datalist id="clients-list-inv">
-                      {clients.map(c => (
-                        <option key={c.id} value={c.name} />
-                      ))}
-                    </datalist>
+                <div className="sm:col-span-2 space-y-1">
+                  <div className="flex items-center justify-between">
+                    <label className="font-bold text-slate-800">
+                      Cliente *
+                    </label>
+                    {clients.length > 0 && (
+                      <select
+                        onChange={e => handleSelectClient(e.target.value)}
+                        value={clientName}
+                        className="text-[11px] bg-slate-100 border border-slate-200 rounded-md px-1.5 py-0.5 text-slate-700 cursor-pointer"
+                      >
+                        <option value="">Seleccionar del directorio...</option>
+                        {clients.map(c => (
+                          <option key={c.id} value={c.name}>{c.name}</option>
+                        ))}
+                      </select>
+                    )}
                   </div>
+                  <input
+                    type="text"
+                    placeholder="Nombre o Razón Social"
+                    value={clientName}
+                    onChange={e => setClientName(e.target.value)}
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-800 font-bold focus:bg-white focus:outline-none focus:border-blue-500 uppercase"
+                    required
+                  />
                 </div>
 
-                <div>
-                  <label className="block font-semibold text-slate-700 mb-1">
-                    Fecha (DD/MM/AAAA)
+                <div className="space-y-1">
+                  <label className="font-bold text-slate-800">
+                    Fecha (dd/mm/aaaa)
                   </label>
                   <input
                     type="text"
                     value={date}
                     onChange={e => setDate(e.target.value)}
                     className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-800 font-mono focus:bg-white focus:outline-none focus:border-blue-500"
+                    required
                   />
                 </div>
               </div>
 
-              {/* Items List */}
+              {/* Teléfono y Estado de Cobro */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <label className="font-bold text-slate-800">
+                    Teléfono / Contacto
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="ej. 0414-1234567"
+                    value={clientPhone}
+                    onChange={e => setClientPhone(e.target.value)}
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-800 font-mono focus:bg-white focus:outline-none focus:border-blue-500"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="font-bold text-slate-800">
+                    Estado de Cobro
+                  </label>
+                  <select
+                    value={status}
+                    onChange={e => setStatus(e.target.value as any)}
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-800 font-bold focus:bg-white focus:outline-none focus:border-blue-500 cursor-pointer"
+                  >
+                    <option value="PAGADO">PAGADO (Cobrado)</option>
+                    <option value="PENDIENTE">PENDIENTE (Por cobrar)</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Quick Pick Products Chips */}
+              {products.length > 0 && (
+                <div className="bg-slate-50 p-2.5 rounded-2xl border border-slate-200/80">
+                  <span className="text-[11px] font-bold text-slate-600 block mb-1">
+                    + Añadir rápido desde inventario:
+                  </span>
+                  <div className="flex flex-wrap gap-1.5 max-h-20 overflow-y-auto">
+                    {products.slice(0, 6).map(prod => (
+                      <button
+                        key={prod.id}
+                        type="button"
+                        onClick={() => handleQuickAddProduct(prod)}
+                        className="px-2 py-0.5 rounded-md bg-white border border-slate-200 text-slate-700 text-[11px] font-medium hover:bg-blue-50 hover:text-[#0052cc] transition-colors cursor-pointer"
+                      >
+                        + {prod.description} (${prod.price})
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Ítems de la Factura */}
               <div className="space-y-2 pt-2">
                 <div className="flex items-center justify-between">
-                  <span className="font-bold text-slate-700">Ítems a Facturar</span>
+                  <label className="font-extrabold text-slate-900 text-xs uppercase tracking-wider">
+                    Ítems Facturados ({items.length})
+                  </label>
                   <button
                     type="button"
                     onClick={handleAddItem}
-                    className="text-xs text-[#0052cc] hover:underline font-semibold flex items-center gap-1"
+                    className="text-xs font-bold text-[#0052cc] hover:underline flex items-center gap-1 cursor-pointer"
                   >
-                    <Plus className="w-3.5 h-3.5" /> Agregar Ítem
+                    <Plus className="w-3.5 h-3.5" />
+                    <span>Agregar Fila</span>
                   </button>
                 </div>
 
-                <div className="border border-slate-200 rounded-xl overflow-x-auto">
-                  <table className="w-full min-w-[480px] sm:min-w-full text-left text-xs">
-                    <thead className="bg-slate-50 border-b border-slate-200 text-slate-600 uppercase text-[10px] font-bold">
-                      <tr>
-                        <th className="py-2 px-3">Descripción</th>
-                        <th className="py-2 px-2 w-24 text-center">Cantidad</th>
-                        <th className="py-2 px-2 w-28 text-center">Precio ($)</th>
-                        <th className="py-2 px-3 w-28 text-right">Total ($)</th>
-                        <th className="py-2 px-2 w-8"></th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-100">
-                      {items.map((row, idx) => (
-                        <tr key={idx} className="bg-white">
-                          <td className="py-2 px-3">
-                            <input
-                              type="text"
-                              list="products-list-inv"
-                              value={row.description}
-                              onChange={e => handleItemFieldChange(idx, 'description', e.target.value)}
-                              placeholder="Seleccione o escriba descripción..."
-                              className="w-full bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 focus:bg-white focus:outline-none uppercase"
-                              required
-                            />
-                            <datalist id="products-list-inv">
-                              {products.map(p => (
-                                <option key={p.id} value={p.description}>
-                                  ${p.price.toFixed(2)}
-                                </option>
-                              ))}
-                            </datalist>
-                          </td>
+                <div className="space-y-2">
+                  {items.map((it, idx) => (
+                    <div key={idx} className="flex items-center gap-2 bg-slate-50 p-2 rounded-xl border border-slate-200">
+                      <div className="w-20">
+                        <input
+                          type="number"
+                          min="1"
+                          placeholder="Cant."
+                          value={it.quantity}
+                          onChange={e => handleItemFieldChange(idx, 'quantity', e.target.value)}
+                          className="w-full bg-white border border-slate-200 rounded-lg px-2 py-1.5 text-center font-mono font-bold text-slate-800"
+                          title="Cantidad"
+                          required
+                        />
+                      </div>
 
-                          <td className="py-2 px-2">
-                            <input
-                              type="number"
-                              min="1"
-                              value={row.quantity}
-                              onChange={e => handleItemFieldChange(idx, 'quantity', e.target.value)}
-                              className="w-full bg-slate-50 border border-slate-200 rounded-lg px-2 py-1.5 text-xs text-slate-800 font-mono text-center focus:bg-white focus:outline-none"
-                              required
-                            />
-                          </td>
+                      <div className="flex-1">
+                        <input
+                          type="text"
+                          placeholder="Descripción del ítem..."
+                          value={it.description}
+                          onChange={e => handleItemFieldChange(idx, 'description', e.target.value)}
+                          className="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-slate-800 font-semibold uppercase text-xs"
+                          required
+                        />
+                      </div>
 
-                          <td className="py-2 px-2">
-                            <input
-                              type="number"
-                              step="0.01"
-                              min="0"
-                              value={row.unitPrice}
-                              onChange={e => handleItemFieldChange(idx, 'unitPrice', e.target.value)}
-                              className="w-full bg-slate-50 border border-slate-200 rounded-lg px-2 py-1.5 text-xs text-slate-800 font-mono text-center focus:bg-white focus:outline-none"
-                              required
-                            />
-                          </td>
+                      <div className="w-24">
+                        <input
+                          type="number"
+                          step="0.01"
+                          min="0"
+                          placeholder="Precio"
+                          value={it.unitPrice}
+                          onChange={e => handleItemFieldChange(idx, 'unitPrice', e.target.value)}
+                          className="w-full bg-white border border-slate-200 rounded-lg px-2 py-1.5 text-right font-mono font-bold text-slate-800"
+                          title="Precio Unitario"
+                          required
+                        />
+                      </div>
 
-                          <td className="py-2 px-3 text-right font-mono font-bold text-slate-800">
-                            ${(row.quantity * row.unitPrice).toFixed(2)}
-                          </td>
+                      <div className="w-20 text-right font-mono font-black text-slate-900 text-xs px-1">
+                        ${(it.quantity * it.unitPrice).toFixed(2)}
+                      </div>
 
-                          <td className="py-2 px-2 text-center">
-                            <button
-                              type="button"
-                              onClick={() => handleRemoveItem(idx)}
-                              disabled={items.length <= 1}
-                              className="text-slate-400 hover:text-rose-600 disabled:opacity-30"
-                            >
-                              ✕
-                            </button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveItem(idx)}
+                        disabled={items.length === 1}
+                        className="p-1.5 text-slate-400 hover:text-rose-600 disabled:opacity-30 cursor-pointer"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  ))}
                 </div>
               </div>
 
-              {/* Total footer con degradado comercial sutil */}
+              {/* Total footer con degradado metalizado */}
               <div className="flex justify-between items-center p-3.5 rounded-2xl bg-gradient-to-r from-slate-900/5 via-blue-900/5 to-emerald-900/5 border border-cyan-700/20">
-                <span className="font-bold text-slate-700">Total a pagar:</span>
-                <span className="font-black text-xl text-slate-950 font-mono">
-                  ${calculateTotal().toFixed(2)}
+                <span className="font-extrabold text-slate-700">Total a Pagar:</span>
+                <span className="font-mono font-black text-xl text-slate-950">
+                  ${calculateTotal().toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </span>
               </div>
 
-              <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100">
+              <div className="flex items-center justify-between pt-3 border-t border-slate-100">
                 <button
                   type="button"
-                  onClick={() => setIsCreateOpen(false)}
-                  className="px-4 py-2.5 rounded-xl text-slate-500 hover:bg-slate-100 transition-colors font-medium cursor-pointer"
+                  onClick={clearForm}
+                  className="text-slate-400 hover:text-slate-600 text-xs underline cursor-pointer"
                 >
-                  Cancelar
+                  Limpiar campos
                 </button>
-                <button
-                  type="submit"
-                  className="px-6 py-2.5 rounded-xl bg-gradient-commercial-btn text-white font-bold transition-all shadow-md cursor-pointer active:scale-98"
-                >
-                  Emitir Factura
-                </button>
+
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setIsModalOpen(false)}
+                    className="px-4 py-2.5 rounded-xl text-slate-500 hover:bg-slate-100 transition-colors font-medium cursor-pointer"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-5 py-2.5 rounded-xl bg-metallic-logo-inner text-white font-extrabold transition-all shadow-md cursor-pointer active:scale-98 border border-cyan-400/40 sheen-metallic"
+                  >
+                    {editingDoc ? 'Actualizar Factura' : 'Emitir Factura'}
+                  </button>
+                </div>
               </div>
+
             </form>
           </div>
         </div>

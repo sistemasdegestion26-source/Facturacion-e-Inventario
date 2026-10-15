@@ -31,13 +31,14 @@ export const DocumentFormatModal: React.FC<DocumentFormatModalProps> = ({
     <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-slate-950/60 backdrop-blur-xs print:p-0 print:bg-white animate-fade-in">
       <div className="bg-white border border-slate-200 rounded-3xl w-full max-w-3xl overflow-hidden shadow-2xl flex flex-col max-h-[95vh] print:max-h-none print:border-none print:shadow-none animate-scale-up">
         
-        {/* Modal Toolbar con degradado comercial sutil (oculto al imprimir) */}
-        <div className="bg-gradient-commercial-header text-white px-5 py-3.5 border-b border-cyan-900/40 flex items-center justify-between print:hidden">
+        {/* Modal Toolbar con degradado metalizado comercial (oculto al imprimir) */}
+        <div className="bg-metallic-logo-inner text-white px-5 py-3.5 border-b border-cyan-800/40 flex items-center justify-between print:hidden sheen-metallic">
           <div className="flex items-center gap-2">
-            <span className="text-xs font-bold text-slate-300 uppercase tracking-wider">
+            <CreandoLogo size="xs" variant="icon" />
+            <span className="text-xs font-bold text-slate-200 uppercase tracking-wider">
               Formato Oficial CREANDO
             </span>
-            <span className="text-xs font-mono font-bold text-cyan-300 bg-blue-950/60 px-2 py-0.5 rounded-md border border-cyan-500/30">
+            <span className="text-xs font-mono font-bold text-amber-300 bg-slate-900/70 px-2 py-0.5 rounded-md border border-amber-400/30">
               {title} #{document.number}
             </span>
           </div>
@@ -56,7 +57,7 @@ export const DocumentFormatModal: React.FC<DocumentFormatModalProps> = ({
 
             <button
               onClick={handlePrint}
-              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-gradient-commercial-btn text-white text-xs font-bold transition-all shadow-md cursor-pointer active:scale-98"
+              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-metallic-gold text-slate-950 text-xs font-black transition-all shadow-md cursor-pointer active:scale-98 border border-amber-300/40"
             >
               <Printer className="w-3.5 h-3.5 stroke-[2.5]" />
               <span>Imprimir / PDF</span>

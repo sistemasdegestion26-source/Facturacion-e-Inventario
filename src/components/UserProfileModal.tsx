@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { User, Lock, KeyRound, Check, X, Shield, Eye, EyeOff } from 'lucide-react';
 import simonAvatar from '../assets/simon.jpg';
 import { storageService } from '../services/storageService';
+import { CreandoLogo } from './CreandoLogo';
 
 interface UserProfileModalProps {
   onClose: () => void;
@@ -50,13 +51,18 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-xs animate-fade-in">
       <div className="bg-white border border-slate-200 rounded-3xl w-full max-w-md overflow-hidden shadow-2xl animate-scale-up">
         
-        {/* Header con degradado comercial sutil */}
-        <div className="bg-gradient-commercial-header text-white px-6 py-4 flex items-center justify-between border-b border-cyan-900/40">
-          <div className="flex items-center gap-2">
-            <Shield className="w-4 h-4 text-cyan-300" />
-            <h3 className="font-extrabold text-white text-base">
-              Perfil de Usuario
-            </h3>
+        {/* Header con colores internos del logo degradado y metalizado */}
+        <div className="bg-metallic-logo-inner text-white px-6 py-4 flex items-center justify-between border-b border-cyan-800/40 sheen-metallic">
+          <div className="flex items-center gap-2.5">
+            <CreandoLogo size="xs" variant="icon" />
+            <div>
+              <h3 className="font-extrabold text-white text-base">
+                Perfil de Usuario • Hendrick
+              </h3>
+              <p className="text-[11px] text-cyan-200">
+                Administración y cambio de contraseña de acceso
+              </p>
+            </div>
           </div>
           <button
             onClick={onClose}
@@ -177,7 +183,7 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
             </button>
             <button
               type="submit"
-              className="px-5 py-2.5 rounded-xl bg-gradient-commercial-btn text-white font-bold transition-all shadow-md flex items-center gap-1.5 cursor-pointer active:scale-98"
+              className="px-5 py-2.5 rounded-xl bg-metallic-logo-inner text-white font-extrabold transition-all shadow-md flex items-center gap-1.5 cursor-pointer active:scale-98 border border-cyan-400/40 sheen-metallic"
             >
               <Check className="w-3.5 h-3.5 stroke-[2.5]" />
               <span>Actualizar Contraseña</span>

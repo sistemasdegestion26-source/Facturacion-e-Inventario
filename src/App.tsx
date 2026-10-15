@@ -12,12 +12,14 @@ import { ClientesView } from './components/ClientesView';
 import { DocumentFormatModal } from './components/DocumentFormatModal';
 import { UserProfileModal } from './components/UserProfileModal';
 import { DriveBackupModal } from './components/DriveBackupModal';
+import { DataManagementModal } from './components/DataManagementModal';
 
 export default function App() {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => storageService.getAuth());
   const [currentTab, setCurrentTab] = useState<ActiveTab>('panel');
   const [isProfileModalOpen, setIsProfileModalOpen] = useState<boolean>(false);
   const [isDriveModalOpen, setIsDriveModalOpen] = useState<boolean>(false);
+  const [isDataManagementOpen, setIsDataManagementOpen] = useState<boolean>(false);
   
   // Estados para sincronización en tiempo real
   const [isSynced, setIsSynced] = useState<boolean>(true);
@@ -174,7 +176,6 @@ export default function App() {
   const handleLoginSuccess = () => {
     storageService.setAuth(true);
     setIsAuthenticated(true);
-    // Disparar sincronización inmediata al entrar
     syncWithServer(false);
     showToast('Bienvenido, Hendrick.');
   };
@@ -184,7 +185,7 @@ export default function App() {
     setIsAuthenticated(false);
   };
 
-  // Products Handlers (Solo Descripción y Precio)
+  // Products Handlers (Guardar y Editar Datos Cargados)
   const handleSaveProduct = (product: Product) => {
     const exists = products.some(p => p.id === product.id);
     let nextProds: Product[];
@@ -198,13 +199,24 @@ export default function App() {
     commitData(nextProds, clients, documents);
   };
 
+  const handleQuickAdjustStock = (productId: string, delta: number) => {
+    const nextProds = products.map(p => {
+      if (p.id === productId) {
+        const nextStock = Math.max(0, p.stock + delta);
+        return { ...p, stock: nextStock };
+      }
+      return p;
+    });
+    commitData(nextProds, clients, documents);
+  };
+
   const handleDeleteProduct = (productId: string) => {
     const nextProds = products.filter(p => p.id !== productId);
     showToast('Producto eliminado del inventario.');
     commitData(nextProds, clients, documents);
   };
 
-  // Clients Handlers
+  // Clients Handlers (Guardar y Editar Datos Cargados)
   const handleSaveClient = (client: Client) => {
     const exists = clients.some(c => c.id === client.id);
     let nextClients: Client[];
@@ -224,10 +236,17 @@ export default function App() {
     commitData(products, nextClients, documents);
   };
 
-  // Documents Handlers (Presupuesto & Facturación)
+  // Documents Handlers (Guardar y Editar Presupuestos & Facturas Cargados)
   const handleSaveDocument = (doc: DocumentRecord) => {
-    const nextDocs = [doc, ...documents];
-    showToast(`${doc.type === 'PRESUPUESTO' ? 'Presupuesto' : 'Factura'} #${doc.number} guardado con éxito.`);
+    const exists = documents.some(d => d.id === doc.id);
+    let nextDocs: DocumentRecord[];
+    if (exists) {
+      nextDocs = documents.map(d => d.id === doc.id ? doc : d);
+      showToast(`${doc.type === 'PRESUPUESTO' ? 'Presupuesto' : 'Factura'} #${doc.number} actualizado.`);
+    } else {
+      nextDocs = [doc, ...documents];
+      showToast(`${doc.type === 'PRESUPUESTO' ? 'Presupuesto' : 'Factura'} #${doc.number} guardado con éxito.`);
+    }
     commitData(products, clients, nextDocs);
   };
 
@@ -308,6 +327,16 @@ export default function App() {
     commitData(nextProds, nextClients, nextDocs);
   };
 
+  const handleCommitClean = (
+    newProducts: Product[],
+    newClients: Client[],
+    newDocs: DocumentRecord[],
+    msg: string
+  ) => {
+    commitData(newProducts, newClients, newDocs);
+    showToast(msg);
+  };
+
   // If not logged in, render single Login screen
   if (!isAuthenticated) {
     return <LoginView onLoginSuccess={handleLoginSuccess} />;
@@ -316,7 +345,7 @@ export default function App() {
   return (
     <div className="min-h-screen bg-gradient-commercial-subtle text-slate-800 flex flex-col font-sans selection:bg-emerald-500/20 selection:text-slate-900">
       
-      {/* Soft Header Navbar */}
+      {/* Header Navbar con Logo CREANDO y colores metalizados */}
       <HeaderNav
         currentTab={currentTab}
         onSelectTab={tab => {
@@ -326,13 +355,14 @@ export default function App() {
         onLogout={handleLogout}
         onOpenProfile={() => setIsProfileModalOpen(true)}
         onOpenDriveBackup={() => setIsDriveModalOpen(true)}
+        onOpenDataManagement={() => setIsDataManagementOpen(true)}
         isSynced={isSynced}
         isSyncing={isSyncing}
         onManualSync={() => syncWithServer(true)}
         lastSyncTime={lastSyncTime}
       />
 
-      {/* Main Content Area (con padding inferior para el menú móvil en Android / iPhone) */}
+      {/* Main Content Area */}
       <main className="flex-1 max-w-6xl w-full mx-auto p-3 sm:p-6 lg:p-8 pb-24 md:pb-8">
         {currentTab === 'panel' && (
           <PanelView
@@ -342,6 +372,7 @@ export default function App() {
             onNavigate={setCurrentTab}
             onOpenNewDocument={handleOpenNewDocument}
             onViewDocument={setSelectedDocumentForView}
+            onOpenDataManagement={() => setIsDataManagementOpen(true)}
           />
         )}
 
@@ -350,6 +381,7 @@ export default function App() {
             products={products}
             onSaveProduct={handleSaveProduct}
             onDeleteProduct={handleDeleteProduct}
+            onQuickAdjustStock={handleQuickAdjustStock}
           />
         )}
 
@@ -417,10 +449,21 @@ export default function App() {
         />
       )}
 
+      {/* Limpieza y Gestión de Datos Modal */}
+      {isDataManagementOpen && (
+        <DataManagementModal
+          products={products}
+          clients={clients}
+          documents={documents}
+          onClose={() => setIsDataManagementOpen(false)}
+          onCommitClean={handleCommitClean}
+        />
+      )}
+
       {/* Toast Notification */}
       {toastMessage && (
-        <div className="fixed bottom-16 md:bottom-5 right-5 z-50 px-4 py-2.5 rounded-xl bg-gradient-commercial-dark text-white text-xs font-semibold shadow-xl border border-cyan-800/40 animate-fade-in flex items-center gap-2">
-          <span className="w-2 h-2 rounded-full bg-emerald-400 shrink-0"></span>
+        <div className="fixed bottom-16 md:bottom-5 right-5 z-50 px-4 py-2.5 rounded-2xl bg-metallic-logo-inner text-white text-xs font-bold shadow-2xl border border-cyan-400/40 animate-fade-in flex items-center gap-2 sheen-metallic">
+          <span className="w-2 h-2 rounded-full bg-amber-400 shrink-0"></span>
           <span>{toastMessage}</span>
         </div>
       )}
