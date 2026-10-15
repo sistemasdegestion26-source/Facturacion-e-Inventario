@@ -1,4 +1,4 @@
-import { Product, Client, DocumentRecord } from '../types/erp';
+import type { Product, Client, DocumentRecord } from '../types/erp.ts';
 
 export const INITIAL_PRODUCTS: Product[] = [
   {
