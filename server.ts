@@ -4,7 +4,7 @@ import fs from 'fs';
 import path from 'path';
 
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
 
 app.use(express.json({ limit: '10mb' }));
 
@@ -91,7 +91,10 @@ app.get('/api/backup/download', (req, res) => {
 
 // Vite middleware in dev or static in prod
 const isProd = process.env.NODE_ENV === 'production';
-if (!isProd) {
+const distPath = path.join(import.meta.dirname, 'dist');
+const hasDist = fs.existsSync(path.join(distPath, 'index.html'));
+
+if (!isProd || !hasDist) {
   const { createServer: createViteServer } = await import('vite');
   const vite = await createViteServer({
     server: { middlewareMode: true },
@@ -99,9 +102,9 @@ if (!isProd) {
   });
   app.use(vite.middlewares);
 } else {
-  app.use(express.static(path.join(import.meta.dirname, 'dist')));
+  app.use(express.static(distPath));
   app.get('*', (_req: Request, res: Response) => {
-    res.sendFile(path.join(import.meta.dirname, 'dist', 'index.html'));
+    res.sendFile(path.join(distPath, 'index.html'));
   });
 }
 
