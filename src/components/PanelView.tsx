@@ -1,5 +1,5 @@
 import React from 'react';
-import { Product, Client, DocumentRecord, ActiveTab } from '../types/erp';
+import type { Product, Client, DocumentRecord, ActiveTab } from '../types/erp.ts';
 import { CreandoLogo } from './CreandoLogo';
 import { 
   FileText, 

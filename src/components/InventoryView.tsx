@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Product } from '../types/erp';
+import type { Product } from '../types/erp.ts';
 import { CreandoLogo } from './CreandoLogo';
 import { 
   Package, 

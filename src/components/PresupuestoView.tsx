@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { DocumentRecord, Product, Client, DocumentItem } from '../types/erp';
+import type { DocumentRecord, Product, Client, DocumentItem } from '../types/erp.ts';
 import { CreandoLogo } from './CreandoLogo';
 import { 
   FileText, 

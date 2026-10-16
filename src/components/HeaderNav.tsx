@@ -1,5 +1,5 @@
 import React from 'react';
-import { ActiveTab } from '../types/erp';
+import type { ActiveTab } from '../types/erp.ts';
 import { CreandoLogo } from './CreandoLogo';
 import { 
   LayoutDashboard, 

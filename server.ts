@@ -1,18 +1,15 @@
 import express from 'express';
+import type { Request, Response } from 'express';
 import fs from 'fs';
 import path from 'path';
-import { fileURLToPath } from 'url';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 const app = express();
 const PORT = 3000;
 
 app.use(express.json({ limit: '10mb' }));
 
-// Database file path
-const DATA_DIR = path.join(__dirname, 'data');
+// Database file path using import.meta.dirname
+const DATA_DIR = path.join(import.meta.dirname, 'data');
 const DB_FILE = path.join(DATA_DIR, 'creando_db.json');
 
 import { INITIAL_PRODUCTS, INITIAL_CLIENTS, INITIAL_DOCUMENTS } from './src/data/initialData.ts';
@@ -102,9 +99,9 @@ if (!isProd) {
   });
   app.use(vite.middlewares);
 } else {
-  app.use(express.static(path.join(__dirname, 'dist')));
-  app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, 'dist', 'index.html'));
+  app.use(express.static(path.join(import.meta.dirname, 'dist')));
+  app.get('*', (_req: Request, res: Response) => {
+    res.sendFile(path.join(import.meta.dirname, 'dist', 'index.html'));
   });
 }
 

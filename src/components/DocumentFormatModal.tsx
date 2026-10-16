@@ -1,5 +1,5 @@
 import React from 'react';
-import { DocumentRecord } from '../types/erp';
+import type { DocumentRecord } from '../types/erp.ts';
 import { CreandoLogo } from './CreandoLogo';
 import { Printer, X, CheckCircle2, ArrowRight } from 'lucide-react';
 

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Product, Client, DocumentRecord, ActiveTab } from './types/erp';
+import type { Product, Client, DocumentRecord, ActiveTab } from './types/erp.ts';
 import { storageService } from './services/storageService';
 
 import { LoginView } from './components/LoginView';

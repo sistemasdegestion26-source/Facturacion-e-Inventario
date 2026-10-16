@@ -16,7 +16,7 @@ import {
   Sparkles,
   Info
 } from 'lucide-react';
-import { Product, Client, DocumentRecord } from '../types/erp';
+import type { Product, Client, DocumentRecord } from '../types/erp.ts';
 import { CreandoLogo } from './CreandoLogo';
 
 interface DriveBackupModalProps {

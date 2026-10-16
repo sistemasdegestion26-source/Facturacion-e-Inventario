@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Client } from '../types/erp';
+import type { Client } from '../types/erp.ts';
 import { CreandoLogo } from './CreandoLogo';
 import { 
   Users, 

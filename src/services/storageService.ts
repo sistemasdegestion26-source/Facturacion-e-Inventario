@@ -1,5 +1,5 @@
-import { Product, Client, DocumentRecord } from '../types/erp';
-import { INITIAL_PRODUCTS, INITIAL_CLIENTS, INITIAL_DOCUMENTS } from '../data/initialData';
+import type { Product, Client, DocumentRecord } from '../types/erp.ts';
+import { INITIAL_PRODUCTS, INITIAL_CLIENTS, INITIAL_DOCUMENTS } from '../data/initialData.ts';
 
 const KEYS = {
   PRODUCTS: 'creando_products_v2',

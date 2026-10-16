@@ -13,8 +13,8 @@ import {
   Sparkles,
   ShieldAlert
 } from 'lucide-react';
-import { Product, Client, DocumentRecord } from '../types/erp';
-import { INITIAL_PRODUCTS, INITIAL_CLIENTS, INITIAL_DOCUMENTS } from '../data/initialData';
+import type { Product, Client, DocumentRecord } from '../types/erp.ts';
+import { INITIAL_PRODUCTS, INITIAL_CLIENTS, INITIAL_DOCUMENTS } from '../data/initialData.ts';
 
 interface DataManagementModalProps {
   products: Product[];
